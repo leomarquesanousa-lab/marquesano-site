@@ -5,12 +5,18 @@ import "./motion.css";
 import SiteMotion from "./components/SiteMotion";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
 import { siteIcons } from "./config/icons";
+import { siteUrl, siteTitle, siteDescription, socialDescription, socialImage } from "./config/metadata";
 
 export const metadata = {
-  metadataBase: new URL("https://marquesano.com.br"),
+  metadataBase: new URL(siteUrl),
   icons: siteIcons,
-  title: "Marquesano | Sites profissionais por assinatura",
-  description: "Sites profissionais para pequenos negócios sem taxa de criação. Domínio, hospedagem, manutenção e suporte em uma única mensalidade."
+  title: siteTitle,
+  description: siteDescription,
+  applicationName: "Marquesano",
+  creator: "Marquesano",
+  publisher: "Marquesano",
+  openGraph: { type: "website", locale: "pt_BR", siteName: "Marquesano", title: siteTitle, description: socialDescription, images: [socialImage] },
+  twitter: { card: "summary_large_image", title: siteTitle, description: socialDescription, images: [socialImage] }
 };
 
 export const viewport = { themeColor: "#0a1320" };

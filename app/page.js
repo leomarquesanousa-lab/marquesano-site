@@ -1,4 +1,5 @@
-"use client";
+import { pageMetadata } from "./config/metadata";
+export const metadata = pageMetadata("/");
 
 import { Navigation, Footer } from "./components/Experience";
 import ContactForm from "./components/ContactForm";

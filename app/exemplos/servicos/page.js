@@ -1,5 +1,7 @@
+import { pageMetadata } from "../../config/metadata";
 import { getWhatsAppUrl } from "../../config/whatsapp";
 import { Form, Navigation } from "../../components/Experience";
+export const metadata = pageMetadata("/exemplos/servicos", "Serviços locais | Portfólio Marquesano", "Exemplo demonstrativo de site para prestadores de serviços no portfólio da Marquesano.");
 export default function Servicos() {
   return (
     <main className="bizPage serviceTheme">
