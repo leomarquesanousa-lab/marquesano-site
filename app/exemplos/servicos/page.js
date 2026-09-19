@@ -1,9 +1,10 @@
+import { getWhatsAppUrl } from "../../config/whatsapp";
 import { Form, Navigation } from "../../components/Experience";
 export default function Servicos() {
   return (
     <main className="bizPage serviceTheme">
       <div className="demoTop">
-        <a href="/">← Voltar para SuaMarca</a>
+        <a href="/">← Voltar para Marquesano</a>
         <span>DEMONSTRAÇÃO • SERVIÇOS</span>
       </div>
 
@@ -61,7 +62,7 @@ export default function Servicos() {
           <h2>Solicite um orçamento.</h2>
           <p>Envie sua necessidade pelo WhatsApp e receba retorno rápido.</p>
         </div>
-        <a className="bizBtn light" href="#formulario">Falar agora</a>
+        <a className="bizBtn light" href={getWhatsAppUrl()} target="_blank" rel="noopener noreferrer">Falar pelo WhatsApp</a>
       </section>
       <section id="formulario" className="experienceContact"><div><h2>Conte o que precisa resolver.</h2><p>Formulário demonstrativo de orçamento.</p></div><Form title="Preparar orçamento"/></section>
     </main>

@@ -6,7 +6,7 @@ export default function Clinica() {
   return (
     <main className="clinic">
       <div className="demoNotice">
-        <a href="/">← Voltar para SuaMarca</a>
+        <a href="/">← Voltar para Marquesano</a>
         <span>CLÍNICA FICTÍCIA • DEMONSTRAÇÃO</span>
       </div>
 
@@ -123,7 +123,7 @@ export default function Clinica() {
           <div><strong>aurora</strong><small>clínica integrada</small></div>
         </div>
         <p>Segunda a sexta, 7h às 20h</p>
-        <p>Clínica, avaliações e depoimentos fictícios. Projeto SuaMarca.</p>
+        <p>Clínica, avaliações e depoimentos fictícios. Projeto Marquesano.</p>
       </footer>
     </main>
   );

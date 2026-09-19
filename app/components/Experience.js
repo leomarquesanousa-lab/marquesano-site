@@ -4,17 +4,18 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import BookingCalendar from "./BookingCalendar";
 import { availability } from "./availability.mjs";
+import MainFooter from "./MainFooter";
 
 export function Arrow() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4 12h15M13 5l7 7-7 7"/></svg>; }
 
-export function Navigation({ brand = "SuaMarca", home = "/", links, action = "/contato", actionLabel = "Vamos conversar", commercial = false }) {
+export function Navigation({ brand = "Marquesano", home = "/", links, action = "/contato", actionLabel = "Vamos conversar", commercial = false }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const items = links || [["Home", "/"], ["Serviços", "/servicos"], ["Portfólio", "/portfolio"], ["Planos", "/planos"], ["Sobre", "/sobre"], ["Contato", "/contato"]];
   return <header className={`studioNav ${commercial ? "commercialNav" : ""}`}>
     <a className={`studioBrand${commercial ? " siteLogo" : ""}`} href={commercial ? "/" : home}>{commercial ? <img src="/images/logobranco.png" width="2172" height="724" alt="Marquesano — Home"/> : <>{brand}<span className="brandDot">.</span></>}</a>
     <button className="mobileToggle" aria-label={open ? "Fechar menu" : "Abrir menu"} aria-expanded={open} aria-controls="site-navigation" onClick={() => setOpen(!open)}>{open ? "Fechar −" : "Menu +"}</button>
-    <nav id="site-navigation" aria-label="Navegação principal" className={open ? "isOpen" : ""}>{items.map(([label, href]) => <a key={href} href={href} aria-current={pathname === href ? "page" : undefined} onClick={() => setOpen(false)}>{label}</a>)}</nav>
+    <nav id="site-navigation" aria-label="Navegação principal" className={open ? "isOpen" : ""}>{items.map(([label, href]) => <a key={href} href={href} aria-current={pathname === href ? "page" : undefined} onClick={() => setOpen(false)}>{label}</a>)}{commercial && <a className="mobileContactAction" href={action} onClick={() => setOpen(false)}>{actionLabel}<Arrow/></a>}</nav>
     <a className="refinedBtn navAction" href={action}>{actionLabel}<Arrow/></a>
   </header>;
 }
@@ -73,4 +74,4 @@ export function Location({ name, hours, address = "Rua das Oliveiras, 128 · Sã
 
 export function Testimonials({ quotes }) { return <section className="editorialReviews"><span className="eyebrow">BOAS EXPERIÊNCIAS, BOAS HISTÓRIAS</span><div>{quotes.map(([quote, name]) => <blockquote key={name}><span aria-label="5 de 5 estrelas">★★★★★</span><p>“{quote}”</p><cite>{name}</cite></blockquote>)}</div><small>Depoimentos fictícios para apresentação do projeto.</small></section>; }
 
-export function Footer({ brand = "SuaMarca", demo = false }) { return <footer className="studioFooter"><a className={`studioBrand${demo ? "" : " siteLogo footerLogo"}`} href={demo ? "/portfolio" : "/"}>{demo ? `${brand}.` : <img src="/images/logoazul.png" width="2172" height="724" alt="Marquesano — Home"/>}</a><p>{demo ? "Um projeto demonstrativo por SuaMarca." : "Presença digital. Cuidado em cada detalhe."}</p><a href={demo ? "/portfolio" : "/contato"}>{demo ? "Conhecer outros projetos" : "Começar meu projeto"} ↗</a></footer>; }
+export function Footer({ brand = "Marquesano", demo = false }) { return demo ? <footer className="studioFooter"><a className="studioBrand" href="/portfolio">{brand}.</a><p>Um projeto demonstrativo por Marquesano.</p><a href="/portfolio">Conhecer outros projetos ↗</a></footer> : <MainFooter/>; }

@@ -1,0 +1,42 @@
+/* Ajustes de produção, limitados à identidade, contatos e rodapé. */
+.commercialNav .navAction { background: #d5e9ee; color: #112b3c; border-color: #d5e9ee; box-shadow: 0 2px 8px #00000012; }
+.commercialNav .navAction:hover { background: #eef8fa; border-color: #eef8fa; filter: none; }
+.commercialNav .navAction:focus-visible { outline-color: #83c9d9; }
+.commercialNav nav a:after { background: #a3d3df; }
+.commercialNav .mobileContactAction { display: none; }
+.marquesanoFooter { background: #0a1320; color: #f3f7fa; padding: 50px 5.5% 26px; }
+.marquesanoFooterGrid { max-width: 1400px; margin: auto; display: grid; grid-template-columns: 1.15fr 1fr .8fr; gap: 7%; }
+.marquesanoFooterBrand img { width: 186px; height: auto; display: block; }
+.marquesanoFooterBrand p { max-width: 300px; color: #b4c1cd; font-size: 13px; line-height: 1.85; margin: 16px 0 0; }
+.marquesanoFooter h2 { font: 600 12px/1.5 system-ui,sans-serif; letter-spacing: .04em; margin: 17px 0 14px; color: #fff; }
+.marquesanoFooter nav>div { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
+.marquesanoFooter a { color: #d3dfe8; font-size: 13px; line-height: 1.5; transition: color .2s; }
+.marquesanoFooter a:hover { color: #fff; text-decoration: underline; text-underline-offset: 5px; }
+.marquesanoFooter a:focus-visible { outline: 2px solid #8fd2de; outline-offset: 4px; }
+.marquesanoFooter nav a { padding: 10px 0; }
+.marquesanoFooterContact>a { display: block; padding: 9px 0; overflow-wrap: anywhere; }
+.marquesanoFooterContact span { display: block; color: #aabbc9; font-size: 12px; margin-top: 7px; }
+.marquesanoFooterBottom { max-width: 1400px; margin: 30px auto 0; border-top: 1px solid #ffffff20; padding-top: 22px; display: flex; justify-content: space-between; gap: 20px; padding-right: 65px; }
+.marquesanoFooterBottom p { color: #a5b5c4; font-size: 11px; line-height: 1.7; margin: 0; }
+.marquesanoFooterBottom a { font-size: 11px; }
+.refinedForm .formError { color: #98351f; background: #fff2ec; border-left: 3px solid #bb5637; border-radius: 6px; padding: 16px; font-size: 13px; line-height: 1.6; margin: 0; }
+.refinedForm .refinedBtn:disabled { cursor: wait; opacity: .65; transform: none; }
+.formTrap { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.commercialPage .aboutMonogram img { width: 65%; height: auto; }
+@media(max-width:1050px) and (min-width:761px) { .marquesanoFooterGrid { gap: 4%; grid-template-columns: 1fr 1fr; }.marquesanoFooterContact { grid-column: 1/-1; display: flex; align-items: baseline; gap: 28px; flex-wrap: wrap; }.marquesanoFooterContact span { display: inline; margin-left: 12px; } }
+@media(max-width:760px) {
+  .commercialNav nav .mobileContactAction { display: flex; align-items: center; justify-content: center; gap: 16px; color: #112b3c; background: #d5e9ee; border-radius: 8px; padding: 13px 18px; margin-top: 12px; }
+  .commercialNav nav .mobileContactAction:hover { background: #eef8fa; color: #112b3c; }
+  .commercialNav nav .mobileContactAction:after { display: none; }
+  .commercialNav nav.isOpen:after { content: none; }
+  .marquesanoFooter { padding: 30px 24px calc(75px + env(safe-area-inset-bottom, 0px)); }
+  .marquesanoFooterGrid { grid-template-columns: 1fr 1fr; gap: 20px 24px; }
+  .marquesanoFooterBrand { grid-column: 1/-1; }
+  .marquesanoFooterBrand img { width: 168px; }
+  .marquesanoFooterBrand p { margin-top: 10px; max-width: 420px; font-size: 12px; }
+  .marquesanoFooter h2 { margin-top: 8px; }
+  .marquesanoFooter nav>div { grid-template-columns: 1fr 1fr; column-gap: 12px; }
+  .marquesanoFooter nav a, .marquesanoFooterContact>a { min-height: 44px; display: flex; flex-direction: column; justify-content: center; }
+  .marquesanoFooterBottom { padding-right: 0; margin-top: 22px; flex-direction: column; gap: 8px; }
+  .marquesanoFooterBottom a { display: inline-flex; min-height: 44px; align-items: center; }
+}

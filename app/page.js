@@ -1,6 +1,7 @@
 "use client";
 
-import { Navigation, Form, Footer } from "./components/Experience";
+import { Navigation, Footer } from "./components/Experience";
+import ContactForm from "./components/ContactForm";
 import QuarterlyReview from "./components/QuarterlyReview";
 
 const Icon = ({ name, size = 22 }) => {
@@ -146,8 +147,8 @@ export default function Home() {
             <span className="kicker">A ESTRUTURA POR TRÁS DO SITE</span>
             <h2>Quatro peças trabalhando juntas.</h2>
             <p>
-              Não adianta só parecer bonito. Um site precisa ter visual, estabilidade,
-              responsividade e caminhos claros para transformar visita em contato.
+              Além de um bom visual, seu site precisa de estabilidade, boa navegação
+              no celular e caminhos claros para transformar visitas em contatos.
             </p>
           </div>
 
@@ -203,8 +204,8 @@ export default function Home() {
             <span className="kicker">IDENTIDADE VISUAL</span>
             <h2>Seu site precisa combinar com o seu negócio.</h2>
             <p>
-              O mesmo sistema pode assumir personalidades completamente diferentes.
-              É isso que evita a sensação de template repetido.
+              Cores, imagens e linguagem devem refletir a identidade da sua empresa
+              e ajudar seus clientes a reconhecer o que torna seu negócio especial.
             </p>
           </div>
 
@@ -224,8 +225,8 @@ export default function Home() {
       <section id="planos" className="plansSection">
         <div className="sectionIntro center">
           <span className="kicker dark">PLANOS</span>
-          <h2>Comece sem uma entrada cara.</h2>
-          <p>Criação incluída. Você paga apenas a mensalidade do serviço.</p>
+          <h2>Dê o próximo passo para o seu negócio.</h2>
+          <p>Tenha um site profissional para conquistar novos clientes, com criação incluída e planos mensais acessíveis.</p>
         </div>
 
         <div className="planGrid">
@@ -310,7 +311,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="homeContactForm"><div><span className="eyebrow">DO SEU JEITO, DESDE O INÍCIO</span><h2>Conte sua ideia.<br/>Vamos dar o próximo passo.</h2><p>Um espaço para entender seu negócio e a presença que você quer construir.</p></div><Form title="Preparar meu pedido" options={["Essencial", "Profissional", "Business", "Quero orientação"]}/></section>
+      <section className="homeContactForm"><div><span className="eyebrow">DO SEU JEITO, DESDE O INÍCIO</span><h2>Conte sua ideia.<br/>Vamos dar o próximo passo.</h2><p>Um espaço para entender seu negócio e a presença que você quer construir.</p></div><ContactForm options={["Essencial", "Profissional", "Business", "Quero orientação"]}/></section>
       <Footer/>
     </main>
   );

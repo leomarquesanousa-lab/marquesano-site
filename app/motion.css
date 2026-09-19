@@ -1,0 +1,68 @@
+/* Progressive enhancement: content stays visible without JavaScript/observers.
+   Independent translate preserves existing card transforms and layout. */
+@keyframes marquesanoEnter {
+  from { opacity: 0; translate: 0 var(--motion-distance, 14px); }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes marquesanoDepth {
+  from { transform: scale(1.018); }
+  to { transform: scale(1); }
+}
+
+.commercialNav { transition: background-color 240ms ease, box-shadow 240ms ease; }
+.commercialNav.navScrolled { background-color: #0c1726; box-shadow: 0 6px 24px #00000020; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .motionEnter {
+    animation: marquesanoEnter 580ms cubic-bezier(.22, 1, .36, 1) var(--motion-delay, 0ms) backwards;
+  }
+  :is(.heroV9Copy, .commercialHero) > :is(.kicker, .eyebrow, h1, p, .heroPriceV9, .heroButtons, .heroProof, .heroIndex) {
+    animation: marquesanoEnter 650ms cubic-bezier(.22, 1, .36, 1) backwards;
+  }
+  :is(.heroV9Copy, .commercialHero) > h1 { animation-delay: 60ms; }
+  :is(.heroV9Copy, .commercialHero) > p { animation-delay: 130ms; }
+  .heroV9Copy > .heroPriceV9 { animation-delay: 190ms; }
+  .heroV9Copy > .heroButtons { animation-delay: 250ms; }
+  :is(.heroV9Copy > .heroProof, .commercialHero > .heroIndex) { animation-delay: 300ms; }
+  .heroV9Image { animation: marquesanoDepth 1600ms cubic-bezier(.22, 1, .36, 1) backwards; }
+
+  :is(.home, .commercialPage) :is(.mechanismCard, .planCard, .refinedPlans > article, .serviceEditorial > article, .portfolioV12Card) {
+    transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease, background-color 240ms ease;
+  }
+  :is(.home, .commercialPage) :is(.primaryBtn, .secondaryBtn, .whiteBtn, .refinedBtn) {
+    transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease, border-color 220ms ease;
+  }
+  :is(.home, .commercialPage) :is(.refinedBtn svg, .portfolioV12Arrow, .mechanismIcon svg, .serviceIcon svg, .projectVisit svg) {
+    transition: transform 240ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    :is(.home, .commercialPage) :is(.mechanismCard, .planCard, .refinedPlans > article, .serviceEditorial > article):hover {
+      transform: translateY(-3px); border-color: #9ca9cc; box-shadow: 0 12px 28px #0a132014;
+    }
+    .home .planCard.featuredPlan:hover { transform: translateY(-10px); }
+    .home .mechanismCard:hover { background-color: #ffffff12; border-color: #aab6ff55; }
+    :is(.home, .commercialPage) :is(.primaryBtn, .secondaryBtn, .whiteBtn, .refinedBtn):not(:disabled):hover { transform: translateY(-2px); }
+    :is(.home, .commercialPage) :is(.refinedBtn:not(:disabled):hover svg, .projectItem:hover .projectVisit svg) { transform: translateX(3px); }
+    .portfolioV12Card:hover .portfolioV12Arrow { transform: translate(2px, -2px); }
+    :is(.mechanismCard:hover .mechanismIcon svg, .serviceChip:hover .serviceIcon svg) { transform: translateY(-2px); }
+  }
+  :is(.home, .commercialPage) :is(.primaryBtn, .secondaryBtn, .whiteBtn, .refinedBtn):not(:disabled):active { transform: translateY(0); }
+  @media (max-width: 760px) {
+    .motionEnter { --motion-distance: 6px; animation-duration: 360ms; animation-delay: 0ms; }
+    :is(.heroV9Copy, .commercialHero) > :is(.kicker, .eyebrow, h1, p, .heroPriceV9, .heroButtons, .heroProof, .heroIndex) {
+      --motion-distance: 6px; animation-duration: 420ms; animation-delay: 0ms;
+    }
+    .heroV9Copy > .heroButtons { animation-delay: 100ms; }
+    .heroV9Image { animation: none; }
+  }
+}
+
+/* Focus must never wait for an entrance animation. */
+.motionEnter:focus-within, .heroV9Copy > :focus-within { animation: none; }
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  :is(.home, .commercialPage) :is(.primaryBtn, .secondaryBtn, .whiteBtn, .refinedBtn, .portfolioV12Card, .projectItem img):hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motionEnter { opacity: 1; translate: none; animation: none; }
+  .commercialNav { transition: none; }
+}

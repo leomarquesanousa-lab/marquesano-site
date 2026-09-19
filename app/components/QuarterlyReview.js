@@ -11,7 +11,8 @@ export default function QuarterlyReview() {
     </div>
     <div className="quarterlyReviewDetails">
       <span className="quarterlyReviewBadge">A CADA 3 MESES <span>Encontro agendado</span></span>
-      <h3>Tecnologia atualizada + acompanhamento contínuo.</h3>
+      <h3>Tecnologia moderna + acompanhamento contínuo.</h3>
+      <p>Sites rápidos, responsivos e desenvolvidos com tecnologias modernas para uma boa experiência em qualquer dispositivo.</p>
       <p>A revisão pode contemplar:</p>
       <ul>
         <li>Análise visual e da experiência em celular.</li>
