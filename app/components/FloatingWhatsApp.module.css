@@ -1,0 +1,30 @@
+.floating {
+  position: fixed;
+  right: calc(20px + env(safe-area-inset-right, 0px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 150;
+}
+.button {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  padding: 13px;
+  border: 1px solid #ffffff50;
+  border-radius: 50%;
+  background: #168547;
+  color: #fff;
+  box-shadow: 0 5px 20px #083e352b;
+  cursor: pointer;
+  transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+}
+.button:hover { transform: translateY(-2px); background: #116c39; box-shadow: 0 7px 23px #083e353b; }
+.button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; box-shadow: 0 0 0 6px #168547; }
+.notice { position: absolute; right: 0; bottom: 68px; width: min(280px, calc(100vw - 48px)); padding: 20px; background: #fff; color: #263d31; border: 1px solid #dbe6dc; border-radius: 12px; box-shadow: 0 8px 35px #122a2526; font: 13px/1.6 system-ui, sans-serif; }
+.notice p { margin: 8px 0 14px; }
+.notice button { border: 0; padding: 6px 0; background: none; color: #136b37; text-decoration: underline; cursor: pointer; }
+@media(max-width:760px) {
+  .floating { right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .button { width: 48px; height: 48px; padding: 10px; }
+}
+@media(prefers-reduced-motion:reduce) { .button { transition: none; } }
