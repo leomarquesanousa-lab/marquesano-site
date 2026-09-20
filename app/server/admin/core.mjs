@@ -17,6 +17,7 @@ export const modules = {
   clientes: { title: 'Clientes', description: 'Dados de contato e histórico de relacionamento.', roles: ['OWNER', 'ADMIN', 'SALES'] },
   seo: { title: 'SEO', description: 'Diagnóstico técnico e Google Search Console.', roles: ['OWNER', 'ADMIN', 'MARKETING'] },
   configuracoes: { title: 'Configurações', description: 'Configurações administrativas e integrações.', roles: ['OWNER', 'ADMIN'] },
+  pagamentos: { title: 'Pagamentos', description: 'Assinaturas, pagamentos e configuração dos planos.', roles: ['OWNER', 'ADMIN'] },
   formularios: { title: 'Formulários', description: 'Submissões recebidas e notificações por e-mail.', roles: ['OWNER','ADMIN','SALES'] },
   campanhas: { title: 'Campanhas', description: 'Campanhas e links de atribuição.', roles: ['OWNER','ADMIN','MARKETING'] },
   usuarios: { title: 'Usuários', description: 'Contas administrativas e permissões.', roles: ['OWNER'] },
@@ -96,7 +97,7 @@ export function createAdminStore(filename, now = Date.now) {
 const storeKey = Symbol.for('marquesano.admin.store');
 export function adminStore() {
   if (!configured()) throw Error('Admin não configurado.');
-  if (globalThis[storeKey] && !globalThis[storeKey].repository?.meta) {
+  if (globalThis[storeKey] && (!globalThis[storeKey].repository?.meta || !globalThis[storeKey].repository?.plans || !globalThis[storeKey].repository?.billing)) {
     globalThis[storeKey].close();
     delete globalThis[storeKey];
   }

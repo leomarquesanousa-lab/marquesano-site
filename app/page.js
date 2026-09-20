@@ -1,3 +1,7 @@
+import PlanCards from "./components/PlanCards";
+import { publicPlans } from "./server/plans";
+import { priceLabel } from "./config/plans.mjs";
+export const dynamic="force-dynamic";
 import StructuredData from "./components/StructuredData";
 import { pageMetadata } from "./config/metadata";
 export const metadata = pageMetadata("/");
@@ -78,6 +82,8 @@ const mosaic = [
 ];
 
 function Home() {
+  const plans=publicPlans();
+  const entry=plans.filter(p=>p.active&&p.monthly_price_cents!=null).sort((a,b)=>a.monthly_price_cents-b.monthly_price_cents)[0];
   return (
     <main className="home">
       <Navigation commercial/>
@@ -103,11 +109,11 @@ function Home() {
             <div className="heroPriceV9">
               <div>
                 <small>A PARTIR DE</small>
-                <strong><span>R$</span>99</strong>
+                <strong>{priceLabel(entry?.monthly_price_cents)}</strong>
               </div>
               <div className="heroPriceMetaV9">
                 <b>/mês</b>
-                <span>menos de R$3,30 por dia</span>
+                <span>Confira as condições do plano</span>
               </div>
             </div>
 
@@ -119,7 +125,7 @@ function Home() {
             <div className="heroProof elegantProof">
               <span>R$0 de criação</span>
               <span>Domínio incluso*</span>
-              <span>Contrato de 12 meses</span>
+              <span>{entry ? `${entry.cycles} cobranças mensais` : "Planos mensais"}</span>
             </div>
           </div>
         </div>
@@ -231,53 +237,7 @@ function Home() {
           <p>Tenha um site profissional para conquistar novos clientes, com criação incluída e planos mensais acessíveis.</p>
         </div>
 
-        <div className="planGrid">
-          <article className="planCard">
-            <span className="planName">Essencial</span>
-            <p>Para colocar um pequeno negócio na internet com qualidade.</p>
-            <div className="planPrice"><small>R$</small><strong>99</strong><span>/mês</span></div>
-            <a className="secondaryBtn darkBtn" href="/contato?plano=Essencial">Escolher Essencial</a>
-            <ul>
-              <li>✓ Criação incluída</li>
-              <li>✓ Site responsivo</li>
-              <li>✓ Domínio .com.br*</li>
-              <li>✓ Hospedagem + SSL</li>
-              <li>✓ WhatsApp e formulário</li>
-              <li>✓ Manutenção</li>
-            </ul>
-          </article>
-
-          <article className="planCard featuredPlan">
-            <span className="mostChosen">MAIS ESCOLHIDO</span>
-            <span className="planName">Profissional</span>
-            <p>Mais conteúdo, mais presença e mais recursos para vender melhor.</p>
-            <div className="planPrice"><small>R$</small><strong>149</strong><span>/mês</span></div>
-            <a className="primaryBtn fullBtn" href="/contato?plano=Profissional">Escolher Profissional</a>
-            <ul>
-              <li>✓ Tudo do Essencial</li>
-              <li>✓ Mais páginas e seções</li>
-              <li>✓ Galeria e depoimentos</li>
-              <li>✓ Analytics</li>
-              <li>✓ SEO local</li>
-              <li>✓ Alterações mensais</li>
-            </ul>
-          </article>
-
-          <article className="planCard">
-            <span className="planName">Business</span>
-            <p>Para quem precisa de integrações, formulários e recursos adicionais.</p>
-            <div className="planPrice"><small>R$</small><strong>249</strong><span>/mês</span></div>
-            <a className="secondaryBtn darkBtn" href="/contato?plano=Business">Escolher Business</a>
-            <ul>
-              <li>✓ Tudo do Profissional</li>
-              <li>✓ Agendamento</li>
-              <li>✓ Formulários avançados</li>
-              <li>✓ Integrações</li>
-              <li>✓ Automação básica</li>
-              <li>✓ Recursos sob medida</li>
-            </ul>
-          </article>
-        </div>
+        <PlanCards home/>
 
         <p className="legalNote">* Domínio sujeito à disponibilidade e às condições do plano.</p>
       </section>
@@ -291,7 +251,7 @@ function Home() {
         <div className="faqList">
           <details><summary>Como funciona a revisão trimestral?<span>+</span></summary><p>Nos planos que incluem esse benefício, você tem direito a uma revisão do site com consultoria agendada a cada 3 meses. Podemos avaliar visual, conteúdo, links, botões, formulários e experiência em celular, além de sugerir melhorias para gerar contatos e pequenas recomendações de SEO. O escopo e os ajustes seguem o plano contratado; não se trata de consultoria ilimitada.</p></details>
           <details><summary>Tem taxa de criação?<span>+</span></summary><p>Não. A criação está incluída no serviço mensal.</p></details>
-          <details><summary>Por que o contrato é de 12 meses?<span>+</span></summary><p>Porque todo o trabalho inicial de criação e implantação é subsidiado pela empresa.</p></details>
+          <details><summary>Qual é a duração do plano?<span>+</span></summary><p>O número de cobranças mensais está indicado em cada plano e pode ser conferido antes da contratação.</p></details>
           <details><summary>Posso cancelar antes?<span>+</span></summary><p>Sim, conforme as condições contratuais e eventual cobrança proporcional do benefício inicial concedido.</p></details>
           <details><summary>O domínio está incluído?<span>+</span></summary><p>Um domínio básico .com.br pode ser incluído, sujeito à disponibilidade e às regras do plano.</p></details>
         </div>
@@ -300,7 +260,7 @@ function Home() {
       <section id="contato" className="finalCtaV12">
         <div className="finalCtaTextV12">
           <span className="kicker">VAMOS COLOCAR SUA EMPRESA ONLINE?</span>
-          <h2>Seu site pode começar por R$99/mês.</h2>
+          <h2>Seu site pode começar com o plano certo.</h2>
           <p>Criação, hospedagem, domínio e acompanhamento contínuo em um único serviço.</p>
           <a className="whiteBtn" href="/contato">Conversar sobre meu projeto</a>
         </div>
@@ -313,7 +273,7 @@ function Home() {
         </div>
       </section>
 
-      <section className="homeContactForm"><div><span className="eyebrow">DO SEU JEITO, DESDE O INÍCIO</span><h2>Conte sua ideia.<br/>Vamos dar o próximo passo.</h2><p>Um espaço para entender seu negócio e a presença que você quer construir.</p></div><ContactForm options={["Essencial", "Profissional", "Business", "Quero orientação"]}/></section>
+      <section className="homeContactForm"><div><span className="eyebrow">DO SEU JEITO, DESDE O INÍCIO</span><h2>Conte sua ideia.<br/>Vamos dar o próximo passo.</h2><p>Um espaço para entender seu negócio e a presença que você quer construir.</p></div><ContactForm options={[...plans.map(plan=>plan.name), "Quero orientação"]}/></section>
       <Footer/>
     </main>
   );

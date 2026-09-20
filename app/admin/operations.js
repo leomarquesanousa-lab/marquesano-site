@@ -5,6 +5,7 @@ import SeoSection from './seo-section.js';
 import MarketingSection from './marketing-section.js';
 import { Badge, LoadingState } from './visuals.js';
 import SettingsIntegrations from './settings-integrations.js';
+import PaymentSettings from './payment-settings.js';
 import { OverviewSection, AnalyticsSection, Table } from './report-sections.js';
 
 const labels={NEW:'Novo',CONTACTED:'Contatado',QUALIFIED:'Qualificado',PROPOSAL:'Proposta',WON:'Ganho',LOST:'Perdido',ARCHIVED:'Arquivado',ACTIVE:'Ativo',INACTIVE:'Inativo',PROSPECT:'Prospect',DRAFT:'Rascunho',PAUSED:'Pausada',FINISHED:'Finalizada',LOW:'Baixa',NORMAL:'Normal',HIGH:'Alta',PENDING:'Pendente',SENT:'Enviado',FAILED:'Falhou',UNKNOWN:'Sem confirmação'};
@@ -18,6 +19,8 @@ async function api(path,options={}) {
   const result=await response.json().catch(()=>({error:'Acesso não permitido ou serviço indisponível.'}));
   if(!response.ok)throw Error(result.error||'Não foi possível concluir.');return result;
 }
+export function PaymentsPage() { return <PaymentSettings api={api}/>; }
+
 export default function Operations({module,user,recordId}) {
   const [data,setData]=useState(null),[detail,setDetail]=useState(null),[editing,setEditing]=useState(null),[message,setMessage]=useState(''),[error,setError]=useState(''),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[version,setVersion]=useState(0);
   const [filters,setFilters]=useState({days:'30',start:'',end:'',q:'',status:'',sort:'newest',page:1}),[remote,setRemote]=useState(false),[diagnose,setDiagnose]=useState(false);

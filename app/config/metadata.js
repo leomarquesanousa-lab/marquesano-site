@@ -4,7 +4,7 @@ export const siteDescription = "Criamos sites modernos, rápidos e responsivos p
 export const socialDescription = "Sites modernos, rápidos e responsivos para sua empresa crescer no digital.";
 export const socialImage = {
   url: `${siteUrl}/og-image.jpg`, width: 1200, height: 630, type: "image/jpeg",
-  alt: "Marquesano — Sites profissionais para sua empresa. A partir de R$ 99 por mês."
+  alt: "Marquesano — Sites profissionais para sua empresa. Planos mensais."
 };
 
 export function pageMetadata(path, title = siteTitle, description = siteDescription) {

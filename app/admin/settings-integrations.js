@@ -3,6 +3,7 @@ import { useState } from 'react';
 import styles from './admin.module.css';
 import IntegrationStatus from './integration-status.js';
 import MetaSettings from './meta-settings.js';
+import PaymentSettings from './payment-settings.js';
 
 function IntegrationForm({ title, fields, settings, integration, provider, api, credentialsPresent }) {
   const [saved, setSaved]=useState(settings);
@@ -62,7 +63,7 @@ function LocalCollection({ settings, api }) {
 
 export default function SettingsIntegrations({ data, user, api }) {
   const shared={settings:data.settings,api,credentialsPresent:data.integrations.credentialsPresent};
-  return <><div className={styles.sectionHeading}><div><h2>Integrações</h2><p>Conexões e coleta do site, em um só lugar.</p></div></div><div className={styles.integrationGrid}>
+  return <><PaymentSettings api={api}/><div className={styles.sectionHeading}><div><h2>Integrações</h2><p>Conexões e coleta do site, em um só lugar.</p></div></div><div className={styles.integrationGrid}>
     <IntegrationForm {...shared} title="Google Analytics" provider="ga4" integration={data.integrations.ga4} fields={[
       ['GA4_MEASUREMENT_ID','GA4 Measurement ID','G-…'],['GA4_PROPERTY_ID','GA4 Property ID','ID numérico']
     ]}/>
@@ -81,4 +82,3 @@ export default function SettingsIntegrations({ data, user, api }) {
     </div>
   </>;
 }
-

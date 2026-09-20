@@ -1,6 +1,8 @@
 import { randomUUID, createHash } from 'node:crypto';
 import { InputError, text, choice, email, phone, website, publicPath, leadStatuses, clientStatuses, campaignStatuses } from './validation.mjs';
 import { createMetaStore } from './meta-store.mjs';
+import { createPlanStore } from './plan-store.mjs';
+import { createBillingStore } from './billing-store.mjs';
 
 const plain = row => row ? { ...row } : null;
 const parse = value => { try { return JSON.parse(value || '{}'); } catch { return {}; } };
@@ -92,7 +94,7 @@ export function createRepository(db, now = Date.now) {
     });
   }
   return {
-    list,detail,save,meta:createMetaStore(db,now),
+    list,detail,save,meta:createMetaStore(db,now),plans:createPlanStore(db,now),billing:createBillingStore(db,now),
     note(id,body,actor) { return tx(()=>{requireRow('leads',id);const noteId=randomUUID();run('INSERT INTO lead_notes VALUES (?,?,?,?,?)',noteId,id,actor.id,text(body,4000,true),time());audit(actor,'note','leads',id);return {id:noteId};}); },
     convert(id,actor) { return tx(()=>{const lead=requireRow('leads',id);if(lead.status!=='WON')throw new InputError('Somente leads ganhos podem virar clientes.');const existing=one('SELECT id FROM clients WHERE lead_id=?',id);if(existing)return existing;const clientId=randomUUID();run('INSERT INTO clients (id,lead_id,company_id,name,email,phone,whatsapp,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)',clientId,id,lead.company_id,lead.name,lead.email,lead.phone,lead.whatsapp,'ACTIVE',time(),time());audit(actor,'convert','leads',id);return {id:clientId};}); },
     settings(env=process.env) { const saved=Object.fromEntries(all('SELECT key,value FROM settings').map(r=>[r.key,r.value]));return Object.fromEntries(settingsKeys.map(key=>[key,saved[key]??env[key]??(key==='TRACKING_ENABLED'?'false':'')])); },

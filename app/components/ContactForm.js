@@ -5,7 +5,7 @@ import { Arrow } from "./Experience";
 import { getWhatsAppUrl } from "../config/whatsapp";
 import { createContactSession } from "./contact-session.mjs";
 
-export default function ContactForm({ options = ["Quero conhecer os planos", "Essencial", "Profissional", "Business", "Projeto sob medida"] }) {
+export default function ContactForm({ options = ["Quero conhecer os planos", "Projeto sob medida"] }) {
   const [choice, setChoice] = useState(options[0]);
   const [status, setStatus] = useState(null);
   const [pending, setPending] = useState(false);

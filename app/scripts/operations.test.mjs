@@ -17,7 +17,8 @@ async function setup() {const store=createAdminStore(':memory:');await store.cre
 test('migration upgrades the original schema twice without replacing users or sessions',()=>{
   const db=new DatabaseSync(':memory:');try{
     db.exec("PRAGMA foreign_keys=ON;CREATE TABLE users(id TEXT PRIMARY KEY,email TEXT,password_hash TEXT,role TEXT,active INTEGER);CREATE TABLE sessions(token_hash TEXT PRIMARY KEY,user_id TEXT REFERENCES users(id),expires INTEGER);CREATE TABLE login_limits(key TEXT PRIMARY KEY,count INTEGER,expires INTEGER);INSERT INTO users VALUES('old-owner','owner@example.com','existing-hash','OWNER',1);INSERT INTO sessions VALUES('old-session','old-owner',9999999999999)");
-    migrate(db);migrate(db);assert.equal(db.prepare('SELECT count(*) AS n FROM schema_migrations').get().n,2);assert.equal(db.prepare('SELECT password_hash FROM users').get().password_hash,'existing-hash');assert.equal(db.prepare('SELECT user_id FROM sessions').get().user_id,'old-owner');
+    migrate(db);migrate(db);assert.equal(db.prepare('SELECT count(*) AS n FROM schema_migrations').get().n,4);assert.equal(db.prepare('SELECT password_hash FROM users').get().password_hash,'existing-hash');assert.equal(db.prepare('SELECT user_id FROM sessions').get().user_id,'old-owner');
+    db.prepare("UPDATE subscription_plans SET monthly_price_cents=12345 WHERE id='basico'").run();migrate(db);assert.equal(db.prepare("SELECT monthly_price_cents FROM subscription_plans WHERE id='basico'").get().monthly_price_cents,12345);assert.equal(db.prepare('SELECT count(*) AS n FROM subscription_plans').get().n,3);
   }finally{db.close();}
 });
 test('CRM preserves submissions, deduplicates retries, does not merge different identities',async()=>{

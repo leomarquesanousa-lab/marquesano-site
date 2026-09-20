@@ -1,0 +1,26 @@
+import { InputError, readJson } from './validation.mjs';
+import { syncPlan } from './mercadopago.mjs';
+import { webhookConfiguration } from './mercadopago-webhook.mjs';
+
+export async function paymentOperations(request,path,user,repository,options={}) {
+  if(!['OWNER','ADMIN'].includes(user.role))throw new InputError('Acesso não permitido.',403);
+  const [id,action]=path;
+  if(!id&&request.method==='GET')return {plans:repository.plans.list(),configured:Boolean((options.env||process.env).MERCADOPAGO_ACCESS_TOKEN),webhook:webhookConfiguration(options.env||process.env)};
+  if(id==='historico'&&!action&&request.method==='GET') {
+    const page=Number(new URL(request.url).searchParams.get('page')||1);
+    if(!Number.isInteger(page)||page<1||page>100000)throw new InputError('Página inválida.');
+    return {...repository.billing.report(page),webhook:webhookConfiguration(options.env||process.env)};
+  }
+  if(path.length>2)throw new InputError('Rota inválida.',404);
+  if(id&&!action&&request.method==='PATCH') {
+    const plan=repository.plans.save(id,await readJson(request,4000));
+    repository.audit(user,'update','subscription_plans',id);
+    return {plan};
+  }
+  if(id&&action==='sync'&&request.method==='POST') {
+    const plan=await syncPlan(repository.plans,id,options);
+    repository.audit(user,'sync','subscription_plans',id);
+    return {plan};
+  }
+  throw new InputError('Rota ou método inválido.',405);
+}

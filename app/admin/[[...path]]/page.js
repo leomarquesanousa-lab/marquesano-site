@@ -3,7 +3,7 @@ import { currentAdmin, requireAdmin } from '../../server/admin/session';
 import { modules, canAccess, configured } from '../../server/admin/core.mjs';
 import { AdminShell, LoginForm } from '../ui';
 import styles from '../admin.module.css';
-import Operations from '../operations';
+import Operations, { PaymentsPage } from '../operations';
 
 export default async function AdminPage({ params }) {
   const path = (await params).path || [];
@@ -25,7 +25,7 @@ export default async function AdminPage({ params }) {
   const descriptions={dashboard:'Acompanhe o alcance e os resultados do seu site.',analytics:'Entenda quem chega, de onde vem e o que faz no seu site.',marketing:'Sua central de mídia paga e resultados.',seo:'Saúde técnica e presença na pesquisa do Google.',configuracoes:'Gerencie as conexões do seu site.',usuarios:'Organize sua equipe e seus acessos.',auditoria:'Acompanhe as alterações no ambiente administrativo.'};
   return <AdminShell user={user} links={links}>
     {allowed ? <><div className={styles.pageHeading}><span className={styles.eyebrow}>MARQUESANO / ADMIN</span><h1>{module==='dashboard'?'Visão geral':modules[module].title}</h1><p>{descriptions[module]||modules[module].description}</p></div>
-      <Operations module={module} user={user} recordId={path[1]||null}/>
+      {module==='pagamentos' ? <PaymentsPage/> : <Operations module={module} user={user} recordId={path[1]||null}/>}
     </> : <><h1>Acesso restrito</h1><p>Sua conta não tem permissão para acessar este módulo.</p></>}
   </AdminShell>;
 }

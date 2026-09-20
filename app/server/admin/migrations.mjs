@@ -1,3 +1,5 @@
+import { migratePlans } from './plan-store.mjs';
+import { migrateBilling } from './billing-store.mjs';
 export function migrate(db) {
   db.exec('CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)');
   db.exec('BEGIN IMMEDIATE');
@@ -39,6 +41,14 @@ export function migrate(db) {
         CREATE INDEX meta_oauth_expiry ON meta_oauth_states(expires_at);
       `);
       db.prepare('INSERT INTO schema_migrations VALUES (2,?)').run(new Date().toISOString());
+    }
+    if (!db.prepare('SELECT version FROM schema_migrations WHERE version=3').get()) {
+      migratePlans(db);
+      db.prepare('INSERT INTO schema_migrations VALUES (3,?)').run(new Date().toISOString());
+    }
+    if (!db.prepare('SELECT version FROM schema_migrations WHERE version=4').get()) {
+      migrateBilling(db);
+      db.prepare('INSERT INTO schema_migrations VALUES (4,?)').run(new Date().toISOString());
     }
     db.exec('COMMIT');
   } catch (error) { db.exec('ROLLBACK'); throw error; }
