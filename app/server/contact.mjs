@@ -33,7 +33,7 @@ export function validateContact(data) {
   return clean;
 }
 
-export function createContactHandler({ env = process.env, fetcher = fetch, now = Date.now, logger = console } = {}) {
+export function createContactHandler({ env = process.env, fetcher = fetch, now = Date.now, logger = console, persistence } = {}) {
   function providerDiagnostic(status, details) {
     if (env.NODE_ENV !== "development") return;
     const redact = value => {
@@ -111,10 +111,17 @@ export function createContactHandler({ env = process.env, fetcher = fetch, now =
     const ip = env.CONTACT_TRUSTED_IP_HEADER && request.headers.get(env.CONTACT_TRUSTED_IP_HEADER);
     const ipLimit = ip && limited(`ip:${hash(ip)}`, 5, 900000);
     if (emailLimit || ipLimit) return reply({ ok: false, message: "Muitas tentativas. Aguarde alguns minutos ou fale pelo WhatsApp." }, 429, { "Retry-After": "900" });
+    let submission;
+    const idempotencyKey = `contact-${hash(JSON.stringify(clean) + data.token)}`;
     try {
+      submission = await persistence?.capture(clean, idempotencyKey, request, data);
+    } catch { return fail("Não foi possível registrar sua mensagem agora. Tente novamente mais tarde.", 503); }
+    try {
+      // A repeated request with the same token and fields never duplicates the submission/email.
+      if (submission?.email_status === 'SENT') return reply({ok:true,message:"Mensagem enviada. Obrigado pelo contato! Nossa equipe retornará pelos dados informados."});
       const result = await fetcher("https://api.resend.com/emails", {
         method: "POST",
-        headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json", "Idempotency-Key": `contact-${hash(JSON.stringify(clean) + data.token)}` },
+        headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json", "Idempotency-Key": idempotencyKey },
         body: JSON.stringify({
           from: `Marquesano <${env.CONTACT_FROM_EMAIL}>`, to: [env.CONTACT_TO_EMAIL], reply_to: clean.email,
           subject: "Novo contato pelo site Marquesano",
@@ -123,13 +130,15 @@ export function createContactHandler({ env = process.env, fetcher = fetch, now =
         signal: AbortSignal.timeout(12000)
       });
       if (!result.ok) {
+        await persistence?.failed(submission);
         const details = await result.json().catch(() => null);
         providerDiagnostic(result.status, details);
         return fail("Não foi possível enviar agora. Tente novamente ou fale pelo WhatsApp.", 502);
       }
       const sent = await result.json();
-      if (!sent.id) return fail("Não foi possível confirmar o envio. Tente novamente.", 502);
+      if (!sent.id) { await persistence?.unknown(submission); return fail("Não foi possível confirmar o envio. Tente novamente.", 502); }
+      await persistence?.sent(submission,sent.id);
       return reply({ ok: true, message: "Mensagem enviada. Obrigado pelo contato! Nossa equipe retornará pelos dados informados." });
-    } catch { return fail("O envio demorou mais que o esperado. Tente novamente ou fale pelo WhatsApp.", 502); }
+    } catch { try { await persistence?.unknown(submission); } catch {} return fail("O envio demorou mais que o esperado. Tente novamente ou fale pelo WhatsApp.", 502); }
   };
 }

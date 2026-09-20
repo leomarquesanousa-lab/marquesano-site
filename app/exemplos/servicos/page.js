@@ -1,8 +1,9 @@
+import StructuredData from "../../components/StructuredData";
 import { pageMetadata } from "../../config/metadata";
 import { getWhatsAppUrl } from "../../config/whatsapp";
 import { Form, Navigation } from "../../components/Experience";
 export const metadata = pageMetadata("/exemplos/servicos", "Serviços locais | Portfólio Marquesano", "Exemplo demonstrativo de site para prestadores de serviços no portfólio da Marquesano.");
-export default function Servicos() {
+function Servicos() {
   return (
     <main className="bizPage serviceTheme">
       <div className="demoTop">
@@ -70,3 +71,5 @@ export default function Servicos() {
     </main>
   );
 }
+
+export default function PageWithSEO(props) { return <><StructuredData path="/exemplos/servicos" title={metadata.title} description={metadata.description} service={false}/><Servicos {...props}/></>; }

@@ -1,3 +1,4 @@
+import StructuredData from "./components/StructuredData";
 import { pageMetadata } from "./config/metadata";
 export const metadata = pageMetadata("/");
 
@@ -76,7 +77,7 @@ const mosaic = [
   ["https://images.pexels.com/photos/3738387/pexels-photo-3738387.jpeg?cs=srgb&dl=pexels-polina-tankilevitch-3738387.jpg&fm=jpg", "Comércio"]
 ];
 
-export default function Home() {
+function Home() {
   return (
     <main className="home">
       <Navigation commercial/>
@@ -317,3 +318,5 @@ export default function Home() {
     </main>
   );
 }
+
+export default function PageWithSEO(props) { return <><StructuredData path="/" title={metadata.title} description={metadata.description} service={false}/><Home {...props}/></>; }

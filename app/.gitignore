@@ -1,0 +1,5 @@
+.admin-data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite.backup-*

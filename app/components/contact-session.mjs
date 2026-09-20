@@ -1,4 +1,5 @@
 // Transporte do formulário: sem credenciais; o envio de e-mail acontece no servidor.
+import { currentAttribution, contactTracked } from './tracking.mjs';
 export function createContactSession({ fetcher = fetch, now = Date.now, wait = ms => new Promise(resolve => setTimeout(resolve, ms)) } = {}) {
   let token = "", receivedAt = 0, preparing = null;
   async function prepare() {
@@ -17,11 +18,12 @@ export function createContactSession({ fetcher = fetch, now = Date.now, wait = m
       if (!token || now() - receivedAt > 6900000) await prepare();
       const remaining = 1600 - (now() - receivedAt);
       if (remaining > 0) await wait(remaining);
-      const response = await fetcher("/api/contato", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...fields, token }), signal: AbortSignal.timeout(20000) });
+      const response = await fetcher("/api/contato", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...fields, token, attribution:currentAttribution() }), signal: AbortSignal.timeout(20000) });
       const result = await response.json();
       if (response.status === 400 && result.code === "TOKEN_INVALID" && attempt === 0) { token = ""; continue; }
       if (!response.ok || !result.ok) throw Error(result.message || "Não foi possível enviar sua mensagem.");
       token = "";
+      contactTracked();
       return result;
     }
   }

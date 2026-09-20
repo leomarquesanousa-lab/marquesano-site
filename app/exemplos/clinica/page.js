@@ -1,10 +1,11 @@
+import StructuredData from "../../components/StructuredData";
 import { pageMetadata } from "../../config/metadata";
 
 
 import { Navigation, Form, Location } from "../../components/Experience";
 
 export const metadata = pageMetadata("/exemplos/clinica", "Clínica Aurora | Portfólio Marquesano", "Clínica Aurora: exemplo demonstrativo de site para saúde no portfólio da Marquesano.");
-export default function Clinica() {
+function Clinica() {
   return (
     <main className="clinic">
       <div className="demoNotice">
@@ -130,3 +131,5 @@ export default function Clinica() {
     </main>
   );
 }
+
+export default function PageWithSEO(props) { return <><StructuredData path="/exemplos/clinica" title={metadata.title} description={metadata.description} service={false}/><Clinica {...props}/></>; }
