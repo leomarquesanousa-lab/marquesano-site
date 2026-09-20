@@ -22,9 +22,9 @@ export function LoginForm({ available }) {
   }
   return <form onSubmit={submit} className={styles.form}>
     {!available && <p role="status">Acesso administrativo ainda não configurado.</p>}
-    <label>E-mail<input type="email" name="email" required maxLength={254} autoComplete="username" disabled={pending || !available}/></label>
-    <label>Senha<input type="password" name="password" required maxLength={256} autoComplete="current-password" disabled={pending || !available}/></label>
-    <button disabled={pending || !available}>{pending ? 'Entrando…' : 'Entrar'}</button>
+    <label>E-mail<input type="email" name="email" required maxLength={254} autoComplete="username" inputMode="email" autoCapitalize="none" spellCheck={false} enterKeyHint="next" disabled={pending}/></label>
+    <label>Senha<input type="password" name="password" required maxLength={256} autoComplete="current-password" enterKeyHint="go" disabled={pending}/></label>
+    <button type="submit" disabled={pending}>{pending ? 'Entrando…' : 'Entrar'}</button>
     <p role="alert" className={styles.error}>{error}</p>
   </form>;
 }
