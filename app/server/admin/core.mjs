@@ -56,6 +56,18 @@ export function createAdminStore(filename, now = Date.now) {
   return {
     repository: createRepository(db, now),
     close: () => db.close(),
+    ensureInitialOwner(env = process.env) {
+      return transaction(() => {
+        if (db.prepare('SELECT COUNT(*) AS count FROM users').get().count > 0) return false;
+        const email = typeof env.ADMIN_INITIAL_OWNER_EMAIL === 'string' ? env.ADMIN_INITIAL_OWNER_EMAIL.trim().toLowerCase() : '';
+        const hash = env.ADMIN_INITIAL_OWNER_PASSWORD_HASH;
+        if (!email || !hash) throw Error('Provisionamento administrativo: configure ADMIN_INITIAL_OWNER_EMAIL e ADMIN_INITIAL_OWNER_PASSWORD_HASH para o banco vazio.');
+        if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) || email.length > 254) throw Error('Provisionamento administrativo: ADMIN_INITIAL_OWNER_EMAIL inválido.');
+        if (typeof hash !== 'string' || !/^scrypt\$[a-f0-9]{32}\$[a-f0-9]{128}$/.test(hash)) throw Error('Provisionamento administrativo: ADMIN_INITIAL_OWNER_PASSWORD_HASH inválido; gere o hash com admin-password-hash.mjs.');
+        db.prepare('INSERT INTO users (id,email,password_hash,role,active) VALUES (?,?,?,?,1)').run(randomBytes(16).toString('hex'), email, hash, 'OWNER');
+        return true;
+      });
+    },
     async createOwner(email, password) {
       email = email.trim().toLowerCase();
       if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) || email.length > 254) throw Error('E-mail inválido.');
@@ -97,10 +109,20 @@ export function createAdminStore(filename, now = Date.now) {
 const storeKey = Symbol.for('marquesano.admin.store');
 export function adminStore() {
   if (!configured()) throw Error('Admin não configurado.');
-  if (globalThis[storeKey] && (!globalThis[storeKey].repository?.meta || !globalThis[storeKey].repository?.plans || !globalThis[storeKey].repository?.billing)) {
+  if (globalThis[storeKey] && (!globalThis[storeKey].ensureInitialOwner || !globalThis[storeKey].repository?.meta || !globalThis[storeKey].repository?.plans || !globalThis[storeKey].repository?.billing)) {
     globalThis[storeKey].close();
     delete globalThis[storeKey];
   }
-  if (!globalThis[storeKey]) globalThis[storeKey] = createAdminStore(process.env.ADMIN_DATABASE_PATH);
+  if (!globalThis[storeKey]) {
+    const store = createAdminStore(process.env.ADMIN_DATABASE_PATH);
+    try { store.ensureInitialOwner(); }
+    catch (error) {
+      store.close();
+      // Only fixed validation messages may reach server logs; never log supplied values.
+      console.error(error.message?.startsWith('Provisionamento administrativo:') ? error.message : 'Falha ao provisionar o primeiro OWNER no banco administrativo.');
+      throw error;
+    }
+    globalThis[storeKey] = store;
+  }
   return globalThis[storeKey];
 }

@@ -2,7 +2,7 @@ import nextEnv from '@next/env';
 import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline/promises';
 import { Writable } from 'node:stream';
-import { adminStore, configured } from '../server/admin/core.mjs';
+import { createAdminStore, configured } from '../server/admin/core.mjs';
 
 nextEnv.loadEnvConfig(fileURLToPath(new URL('../../', import.meta.url)), process.env.NODE_ENV !== 'production');
 if (!configured()) {
@@ -22,7 +22,7 @@ try {
   const confirmation = await prompt.question('');
   hidden = false; process.stdout.write('\n');
   if (password !== confirmation) throw Error('As senhas não coincidem.');
-  store = adminStore();
+  store = createAdminStore(process.env.ADMIN_DATABASE_PATH);
   await store.createOwner(email, password);
   console.log('Primeiro OWNER cadastrado. Acesse /admin/login.');
 } catch (error) {

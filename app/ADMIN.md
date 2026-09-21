@@ -33,7 +33,29 @@ O script faz backup consistente com a API SQLite, incluindo WAL, no mesmo diret�
 
 O SQL operacional fica em `repository.mjs`; componentes não executam SQL. Para migrar futuramente a PostgreSQL, preservar o contrato do repositório e adaptar SQL/migrations. Nenhum segundo banco foi criado.
 
-Instalação nova, somente quando não houver usuário:
+Provisionamento de produção sem SSH:
+
+1. Na raiz do projeto local, execute `node app/scripts/admin-password-hash.mjs`.
+   A senha e a confirmação são ocultas; somente a linha de configuração do hash sai em stdout.
+2. No painel da Hostinger, configure `ADMIN_INITIAL_OWNER_EMAIL` e
+   `ADMIN_INITIAL_OWNER_PASSWORD_HASH` com o valor gerado. Cole o hash literalmente,
+   preservando todos os `$`, sem acrescentar aspas. Nunca configure a senha em texto puro.
+3. Mantenha `ADMIN_DATABASE_PATH=/home/u604106388/domains/marquesano.com.br/.admin-data/admin.sqlite`
+   e `ADMIN_SITE_ORIGIN=https://marquesano.com.br` no ambiente publicado.
+4. No próximo início da aplicação, a primeira abertura de `adminStore()` executa
+   as migrações e provisiona o OWNER antes de devolver a conexão aos consumidores,
+   incluindo o login. É inicialização sob demanda; não há endpoint de bootstrap.
+5. Após confirmar o login, as duas variáveis `ADMIN_INITIAL_OWNER_*` podem ser removidas.
+   O usuário permanece no SQLite; o arquivo precisa estar em armazenamento persistente.
+
+A verificação e a inserção usam a mesma conexão, dentro de `BEGIN IMMEDIATE`.
+Qualquer usuário existente, inclusive inativo, impede o provisionamento automático.
+Não há alteração de senha, role ou usuário existente. Banco vazio sem variáveis válidas
+recusa a inicialização; os logs do servidor indicam a variável inválida sem mostrar seu valor.
+Esse mecanismo não confirma o volume montado pela hospedagem: o processo utiliza exatamente
+o `ADMIN_DATABASE_PATH` recebido em runtime, sem caminho alternativo.
+
+Instalação manual local, somente quando não houver usuário:
 
 ```powershell
 node app/scripts/admin-owner.mjs
