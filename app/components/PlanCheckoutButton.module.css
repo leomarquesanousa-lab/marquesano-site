@@ -1,0 +1,19 @@
+:where(.button) {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+button.button:global(.primaryBtn) {
+  border: 0;
+}
+
+.button:disabled {
+  cursor: wait;
+}
+
+.error {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}

@@ -1,11 +1,13 @@
 import { InputError, readJson } from './validation.mjs';
 import { syncPlan } from './mercadopago.mjs';
 import { webhookConfiguration } from './mercadopago-webhook.mjs';
+import { paymentConfiguration, testPaymentConnection } from './payment-connection.mjs';
 
 export async function paymentOperations(request,path,user,repository,options={}) {
   if(!['OWNER','ADMIN'].includes(user.role))throw new InputError('Acesso não permitido.',403);
   const [id,action]=path;
-  if(!id&&request.method==='GET')return {plans:repository.plans.list(),configured:Boolean((options.env||process.env).MERCADOPAGO_ACCESS_TOKEN),webhook:webhookConfiguration(options.env||process.env)};
+  if(!id&&request.method==='GET')return {plans:repository.plans.list(),configured:Boolean((options.env||process.env).MERCADOPAGO_ACCESS_TOKEN?.trim()),configuration:paymentConfiguration(options.env||process.env),webhook:webhookConfiguration(options.env||process.env)};
+  if(id==='test-connection'&&!action&&path.length===1&&request.method==='POST')return {connection:await testPaymentConnection(options),configuration:paymentConfiguration(options.env||process.env)};
   if(id==='historico'&&!action&&request.method==='GET') {
     const page=Number(new URL(request.url).searchParams.get('page')||1);
     if(!Number.isInteger(page)||page<1||page>100000)throw new InputError('Página inválida.');
@@ -18,6 +20,8 @@ export async function paymentOperations(request,path,user,repository,options={})
     return {plan};
   }
   if(id&&action==='sync'&&request.method==='POST') {
+    const existing=repository.plans.get(id);
+    if(!existing.mercadopago_plan_id&&['unknown','syncing'].includes(existing.sync_state))throw new InputError('A criação anterior ainda não foi confirmada. A sincronização foi bloqueada para evitar duplicidade. Aguarde a confirmação ou solicite a reconciliação da operação; não crie outro plano.',409);
     const plan=await syncPlan(repository.plans,id,options);
     repository.audit(user,'sync','subscription_plans',id);
     return {plan};
