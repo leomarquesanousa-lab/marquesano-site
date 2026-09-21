@@ -1,11 +1,10 @@
-import { migratePlans } from './plan-store.mjs';
+import { migratePlans, ensurePlans } from './plan-store.mjs';
 import { migrateBilling } from './billing-store.mjs';
-export function migrate(db) {
-  db.exec('CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)');
-  db.exec('BEGIN IMMEDIATE');
-  try {
-    if (!db.prepare('SELECT version FROM schema_migrations WHERE version=1').get()) {
-      db.exec(`
+export async function migrate(db) {
+  return db.transaction(async () => {
+    await db.exec('CREATE TABLE IF NOT EXISTS schema_migrations (version BIGINT PRIMARY KEY, applied_at TEXT NOT NULL)');
+    if (!(await db.prepare('SELECT version FROM schema_migrations WHERE version=1').get())) {
+      await db.exec(`
         CREATE TABLE companies (id TEXT PRIMARY KEY, name TEXT NOT NULL, document TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL);
         CREATE TABLE visitors (id TEXT PRIMARY KEY, created_at TEXT NOT NULL, last_seen TEXT NOT NULL);
         CREATE TABLE utm_attribution (visitor_id TEXT PRIMARY KEY REFERENCES visitors(id), first_touch TEXT NOT NULL, last_touch TEXT NOT NULL);
@@ -18,7 +17,7 @@ export function migrate(db) {
         CREATE TABLE marketing_events (id TEXT PRIMARY KEY, visitor_id TEXT REFERENCES visitors(id), event TEXT NOT NULL, path TEXT NOT NULL, source TEXT NOT NULL DEFAULT '', medium TEXT NOT NULL DEFAULT '', campaign TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL);
         CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL);
         CREATE TABLE audit_log (id TEXT PRIMARY KEY, actor_id TEXT REFERENCES users(id), action TEXT NOT NULL, entity TEXT NOT NULL, entity_id TEXT NOT NULL, created_at TEXT NOT NULL);
-        CREATE TABLE public_limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, expires INTEGER NOT NULL);
+        CREATE TABLE public_limits (key TEXT PRIMARY KEY, count BIGINT NOT NULL, expires BIGINT NOT NULL);
         CREATE INDEX lead_status_date ON leads(status,created_at);
         CREATE INDEX lead_owner ON leads(owner_id);
         CREATE INDEX submissions_date ON form_submissions(created_at);
@@ -31,25 +30,36 @@ export function migrate(db) {
         CREATE INDEX audit_date ON audit_log(created_at);
         CREATE INDEX sessions_expiry ON sessions(expires);
       `);
-      db.prepare('INSERT INTO schema_migrations VALUES (1,?)').run(new Date().toISOString());
+      await db.prepare('INSERT INTO schema_migrations VALUES (1,?)').run(new Date().toISOString());
     }
-    if (!db.prepare('SELECT version FROM schema_migrations WHERE version=2').get()) {
-      db.exec(`
-        CREATE TABLE meta_connection (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL DEFAULT 0, app_id TEXT, token_ciphertext TEXT, expires_at INTEGER, profile_json TEXT, account_json TEXT, connected_at TEXT);
+    if (!(await db.prepare('SELECT version FROM schema_migrations WHERE version=2').get())) {
+      await db.exec(`
+        CREATE TABLE meta_connection (id BIGINT PRIMARY KEY CHECK(id=1), revision BIGINT NOT NULL DEFAULT 0, app_id TEXT, token_ciphertext TEXT, expires_at BIGINT, profile_json TEXT, account_json TEXT, connected_at TEXT);
         INSERT INTO meta_connection(id,revision) VALUES(1,0);
-        CREATE TABLE meta_oauth_states (state_hash TEXT PRIMARY KEY, browser_hash TEXT NOT NULL, session_hash TEXT NOT NULL REFERENCES sessions(token_hash) ON DELETE CASCADE, expires_at INTEGER NOT NULL, revision INTEGER NOT NULL);
+        CREATE TABLE meta_oauth_states (state_hash TEXT PRIMARY KEY, browser_hash TEXT NOT NULL, session_hash TEXT NOT NULL REFERENCES sessions(token_hash) ON DELETE CASCADE, expires_at BIGINT NOT NULL, revision BIGINT NOT NULL);
         CREATE INDEX meta_oauth_expiry ON meta_oauth_states(expires_at);
       `);
-      db.prepare('INSERT INTO schema_migrations VALUES (2,?)').run(new Date().toISOString());
+      await db.prepare('INSERT INTO schema_migrations VALUES (2,?)').run(new Date().toISOString());
     }
-    if (!db.prepare('SELECT version FROM schema_migrations WHERE version=3').get()) {
-      migratePlans(db);
-      db.prepare('INSERT INTO schema_migrations VALUES (3,?)').run(new Date().toISOString());
+    if (!(await db.prepare('SELECT version FROM schema_migrations WHERE version=3').get())) {
+      await migratePlans(db);
+      await db.prepare('INSERT INTO schema_migrations VALUES (3,?)').run(new Date().toISOString());
     }
-    if (!db.prepare('SELECT version FROM schema_migrations WHERE version=4').get()) {
-      migrateBilling(db);
-      db.prepare('INSERT INTO schema_migrations VALUES (4,?)').run(new Date().toISOString());
+    if (!(await db.prepare('SELECT version FROM schema_migrations WHERE version=4').get())) {
+      await migrateBilling(db);
+      await db.prepare('INSERT INTO schema_migrations VALUES (4,?)').run(new Date().toISOString());
     }
-    db.exec('COMMIT');
-  } catch (error) { db.exec('ROLLBACK'); throw error; }
+    if (!(await db.prepare('SELECT version FROM schema_migrations WHERE version=5').get())) {
+      await db.exec(`CREATE TABLE checkout_attempts (
+        id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, plan_code TEXT NOT NULL,
+        amount_cents BIGINT NOT NULL, state TEXT NOT NULL, created_at BIGINT NOT NULL,
+        terms_version TEXT NOT NULL, subscription_id TEXT REFERENCES mp_subscriptions(id));
+        CREATE UNIQUE INDEX checkout_active_attempt ON checkout_attempts(fingerprint) WHERE state IN ('pending','unknown','authorized');`);
+      await db.prepare('INSERT INTO schema_migrations VALUES (5,?)').run(new Date().toISOString());
+    }
+    if (!(await db.prepare('SELECT version FROM schema_migrations WHERE version=6').get())) {
+      await ensurePlans(db);
+      await db.prepare('INSERT INTO schema_migrations VALUES (6,?)').run(new Date().toISOString());
+    }
+  });
 }

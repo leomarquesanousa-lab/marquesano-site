@@ -1,32 +1,33 @@
 # Planos e Mercado Pago
 
-Em **Configurações → Pagamentos**, OWNER e ADMIN podem editar e sincronizar cada plano separadamente. Valores são persistidos na tabela `subscription_plans` do SQLite administrativo. A migração 3 é automática ao abrir o banco; use armazenamento persistente e os procedimentos de backup existentes.
+Em **Configurações → Pagamentos**, OWNER e ADMIN podem editar e sincronizar cada plano separadamente. Valores são persistidos na tabela `subscription_plans` do PostgreSQL administrativo. A migração 3 é automática ao abrir o banco; use armazenamento persistente e os procedimentos de backup existentes.
 
 O catálogo inicial está em `app/config/plans.mjs`. Depois da primeira migração, editar esse arquivo não substitui valores salvos: utilize o admin.
 
-| Código estável | Nome inicial | Mensalidade inicial | Estado inicial |
+| Código interno preservado | Nome público | Mensalidade inicial | Estado inicial |
 | --- | --- | --- | --- |
 | basico | Básico | R$ 99,00 | Ativo, pendente de sincronização |
-| intermediario | Intermediário | Não definida | Inativo |
-| professional | Professional | Não definida | Inativo |
+| intermediario | Professional | Não definida | Inativo |
+| professional | Business | Não definida | Inativo |
 
 Os R$ 99 e a duração inicial de 12 cobranças mensais vêm do site anterior. Os preços antigos de R$ 149 e R$ 249 não foram associados aos novos planos, pois não foram confirmados. Preço, nome, descrição, ciclos e ativo/inativo podem ser alterados individualmente no admin. Valores monetários são inteiros em centavos no banco e na API, convertidos para reais somente na apresentação e no payload do Mercado Pago.
 
 ## Configuração
 
+- `MERCADOPAGO_PUBLIC_KEY`: chave pública para o CardForm oficial, da mesma aplicação/ambiente do Access Token.
 - `MERCADOPAGO_ACCESS_TOKEN`: credencial exclusivamente do servidor; use credencial da conta/aplicativo correto.
 - `ADMIN_SITE_ORIGIN`: origem HTTPS do site, já usada pelo admin.
-- `ADMIN_DATABASE_PATH`: banco privado e persistente já utilizado pelo admin.
-- URL de retorno: `https://marquesano.com.br/assinatura/retorno` (derivada da origem configurada).
+- `DATABASE_URL`: banco privado e persistente já utilizado pelo admin.
+- Confirmação da contratação: `https://marquesano.com.br/checkout/sucesso`. O retorno legado dos planos já sincronizados permanece preservado.
 
-Não há credencial no navegador. Nenhum pacote é necessário: as chamadas utilizam `fetch` nativo.
+Somente a Public Key chega ao navegador, para o SDK oficial. O Access Token fica exclusivamente no servidor, cujas chamadas utilizam `fetch` nativo.
 
 ## Operação
 
 1. Confirme preço e ciclos de cada plano, ative e salve.
 2. Use **Sincronizar com Mercado Pago** no plano escolhido. A primeira sincronização faz `POST /preapproval_plan`; as seguintes fazem `PUT /preapproval_plan/{id}`. O ID retornado fica vinculado somente àquele plano.
-3. A home e `/planos` consultam o mesmo catálogo. Cada botão leva a `/assinar/{codigo}`; após conferir preço e ciclos, o cliente abre o checkout oficial retornado pela API para aquele plano.
-4. O backend verifica o plano remoto antes de redirecionar, recusando divergências de ID, valor, moeda, frequência, ciclos, status ou condições extras de cobrança. Edições locais bloqueiam novas contratações até a sincronização.
+3. A home e `/planos` consultam o mesmo catálogo. Cada botão leva a `/checkout/{codigo}`, com tokenização do cartão na mesma tela e confirmação pelo backend.
+4. O backend verifica o plano remoto antes de criar a assinatura, recusando divergências de ID, valor, moeda, frequência, ciclos, status ou condições extras de cobrança. Edições locais bloqueiam novas contratações até a sincronização.
 
 Atualizar um plano no provedor pode afetar assinaturas vinculadas. A inativação local bloqueia o checkout do site imediatamente; sincronize o plano inativo para atualizar o status remoto. Ela não é um cancelamento individual de assinaturas existentes.
 
@@ -55,7 +56,7 @@ Variáveis necessárias:
 - `MERCADOPAGO_WEBHOOK_SECRET`: assinatura secreta dos Webhooks.
 - `MERCADOPAGO_ACCESS_TOKEN`: token da mesma conta/aplicação, exclusivamente no servidor.
 - `ADMIN_SITE_ORIGIN=https://marquesano.com.br`: origem HTTPS usada para exibir a URL.
-- `ADMIN_DATABASE_PATH`: caminho absoluto do banco administrativo privado e persistente.
+- `DATABASE_URL`: URL de conexao PostgreSQL do admin.
 
 Em **Configurações → Pagamentos → Assinaturas e pagamentos**, o painel mostra URL, presença do secret, configuração do servidor e última notificação processada. “Configurado no servidor” não verifica o cadastro no painel Mercado Pago; confirme também esse cadastro. O histórico é atualizado a cada 15 segundos e possui paginação.
 
@@ -94,3 +95,33 @@ Referências oficiais:
 - https://www.mercadopago.com.br/developers/en/docs/subscription-plans/create-subscription-plan
 
 Validação local, sem build: `node --test app/scripts/payments.test.mjs` a partir da raiz do projeto. Os testes usam banco em memória e respostas controladas, sem cobranças ou chamadas reais ao provedor.
+
+## Checkout integrado Marquesano
+
+A home e `/planos` agora levam diretamente a `/checkout/basico`, `/checkout/professional` e `/checkout/business`. Uma única página dinâmica mostra o contrato de 12 meses, as 12 cobranças mensais, os benefícios e o preço atual do PostgreSQL. Nenhum preço foi alterado por esta implementação.
+
+Os códigos públicos preservam os vínculos existentes: `basico` → registro `basico`; `professional` → registro `intermediario`; `business` → registro `professional`. Os IDs do Mercado Pago não são renomeados nem recriados.
+
+Configure `MERCADOPAGO_PUBLIC_KEY` e `MERCADOPAGO_ACCESS_TOKEN` da mesma aplicação/ambiente, além de `DATABASE_URL` e `ADMIN_SITE_ORIGIN`. Somente a Public Key é enviada ao navegador. Os planos devem estar ativos, sincronizados e com exatamente 12 ciclos. Planos sem essas condições continuam mostrando os dados e o CardForm; a contratação é recusada no submit até que estejam prontos.
+
+O CardForm oficial do MercadoPago.js v2 usa `iframe: true`: número, validade e CVV ficam nos campos seguros do provedor. A página envia somente o token, e-mail, revisão do plano, identificador opaco da tentativa e aceite dos termos a `POST /api/checkout/{codigo}`. Nome/documento são usados pelo SDK, sem serem encaminhados ao backend Marquesano. Não há envio de preço, número do cartão ou CVV à API do site.
+
+O backend verifica o plano remoto e cria a assinatura por `POST /preapproval` com `preapproval_plan_id`, `payer_email`, `card_token_id`, `external_reference` e `status=authorized`. A confirmação local em `/checkout/sucesso` depende de um recibo HttpOnly e de um registro autorizado no banco; parâmetros na URL não produzem confirmação. Autorizar a assinatura não equivale a marcar uma cobrança como paga: os webhooks existentes continuam responsáveis pelos pagamentos.
+
+A migração 5 adiciona somente `checkout_attempts`, registrando aceite, valor contratado e estado da tentativa, sem armazenar tokens de cartão. Reserva transacional e índice único impedem repetição da mesma contratação. Após timeout, o botão **Verificar assinatura** consulta o recurso oficial pela referência externa, sem repetir o POST. Se o provedor continuar sem confirmar o resultado, o checkout mantém a tentativa pendente e orienta a procurar suporte; não simula sucesso.
+
+Teste isolado, a partir de `app/`, com `ADMIN_PGLITE_MODULE` apontando para uma instalação local de PGlite: `node --test --test-isolation=none scripts/card-checkout.test.mjs scripts/card-checkout-ui.test.cjs scripts/plan-buttons.test.cjs scripts/payments.test.mjs scripts/webhook.test.mjs`. Os testes usam respostas simuladas da API e não cobram cartões. Antes de liberar vendas, valide também com as credenciais e cartões de teste oficiais do Mercado Pago (mesmo ambiente e conta vendedora dos planos).
+
+Referências: https://www.mercadopago.com.br/developers/pt/docs/subscriptions/additional-content/cardtoken e https://www.mercadopago.com.br/developers/pt/reference/online-payments/subscriptions/create-preapproval/post.
+
+### Desenvolvimento local e recuperação do catálogo
+
+Execute `npm run dev` na raiz. O comando usa `app/scripts/dev-local.mjs`: carrega o ambiente normal do Next.js e, somente em desenvolvimento, preenche variáveis de checkout ausentes a partir de `app/.env`. Valores já definidos têm prioridade. Nenhum segredo é impresso, e o ambiente de produção continua usando as variáveis injetadas pela hospedagem.
+
+O catálogo público usa `server/checkout.mjs`, com o mesmo `DATABASE_URL`, schema, repository e migrações. Ele não depende do provisionamento de OWNER para ler os planos ou criar uma assinatura; o login administrativo permanece separado e inalterado.
+
+A migração 6 repõe registros ausentes com `ON CONFLICT DO NOTHING`, preservando preços, estados e IDs já salvos. Ela não inventa valores pendentes. Para recuperar preços de um backup real do catálogo local: `node app/scripts/admin-restore-plans.mjs --sqlite app/.admin-data/admin.sqlite`. O SQLite é aberto somente para leitura e somente registros iniciais ainda não editados no PostgreSQL são atualizados. O script não importa nem altera usuários, sessões ou integrações.
+
+A Public Key é passada por props do Server Component. O CardForm renderiza independentemente do estado ativo e do ID sincronizado, desde que existam preço real e Public Key. Apenas o backend decide se a contratação pode prosseguir. Os logs `CHECKOUT_LOCAL_PLAN` e `CHECKOUT_LOCAL_CARDFORM` mostram código público e booleanos, somente em desenvolvimento.
+
+Para verificar visualmente as três páginas com Chrome/Edge instalado, sem preencher ou enviar cartão: `node app/scripts/checkout-visual-check.mjs`. Inicie o servidor na porta 3000 antes. O script bloqueia requisições de contratação e salva capturas desktop/mobile em uma pasta temporária. Os valores esperados no teste correspondem aos preços recuperados do backup local, não são defaults de cobrança.

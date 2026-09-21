@@ -7,14 +7,14 @@ export async function directCheckout(request, code, plans, options = {}) {
   if (request.headers.get('origin') !== env.ADMIN_SITE_ORIGIN) throw new InputError('Origem inválida.', 403);
   if (!Object.hasOwn(checkoutPlans, code)) throw new InputError('Plano não encontrado.', 404);
   const data = await readJson(request, 512);
-  if (Object.keys(data).some(key => key !== 'revision') || !Number.isSafeInteger(data.revision)) {
+  if (Object.keys(data).some((key) => key !== 'revision') || !Number.isSafeInteger(data.revision)) {
     throw new InputError('Dados de contratação inválidos.');
   }
   const id = checkoutPlans[code].storedId;
-  const plan = plans.get(id);
+  const plan = await plans.get(id);
   if (!plan.active || !Number.isSafeInteger(plan.monthly_price_cents) || plan.monthly_price_cents <= 0 ||
-      !Number.isInteger(plan.cycles) || plan.cycles < 1 || plan.cycles > 1200 ||
-      !plan.mercadopago_plan_id || plan.sync_state !== 'synced' || plan.synced_revision !== plan.revision) {
+  !Number.isInteger(plan.cycles) || plan.cycles < 1 || plan.cycles > 1200 ||
+  !plan.mercadopago_plan_id || plan.sync_state !== 'synced' || plan.synced_revision !== plan.revision) {
     throw new InputError('Plano temporariamente indisponível', 409);
   }
   try {

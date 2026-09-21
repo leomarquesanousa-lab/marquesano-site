@@ -1,12 +1,12 @@
 import 'server-only';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { adminStore, configured, cookieName, canAccess } from './core.mjs';
+import { adminStore, configured, cookieName, canAccess, adminDiagnostic } from './core.mjs';
 
 export async function currentAdmin() {
   if (!configured()) return null;
-  try { return adminStore().getSession((await cookies()).get(cookieName())?.value); }
-  catch { return null; }
+  try {return await (await adminStore()).getSession((await cookies()).get(cookieName())?.value);}
+  catch (error) {adminDiagnostic('ADMIN_SESSION_FAILED', error);return null;}
 }
 export async function requireAdmin(module) {
   const user = await currentAdmin();

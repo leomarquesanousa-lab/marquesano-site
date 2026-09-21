@@ -1,7 +1,7 @@
 import PlanCards from "./components/PlanCards";
 import { publicPlans } from "./server/plans";
 import { priceLabel } from "./config/plans.mjs";
-export const dynamic="force-dynamic";
+export const dynamic = "force-dynamic";
 import StructuredData from "./components/StructuredData";
 import { pageMetadata } from "./config/metadata";
 export const metadata = pageMetadata("/");
@@ -13,80 +13,80 @@ import QuarterlyReview from "./components/QuarterlyReview";
 const Icon = ({ name, size = 22 }) => {
   const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" };
   const paths = {
-    palette: <><circle cx="12" cy="12" r="9"/><circle cx="8" cy="9" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="16" cy="9" r="1"/><path d="M15 16c0 1.4 1.2 2 2.3 1.5C19.6 16.5 21 14.6 21 12"/></>,
-    globe: <><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.1 4.5 6.1 4.5 9S15 17.9 12 21M12 3C9 6.1 7.5 9.1 7.5 12S9 17.9 12 21"/></>,
-    server: <><rect x="4" y="4" width="16" height="6" rx="2"/><rect x="4" y="14" width="16" height="6" rx="2"/><path d="M8 7h.01M8 17h.01M12 7h5M12 17h5"/></>,
-    chat: <><path d="M21 12a8 8 0 0 1-8 8H7l-4 2 1.6-4A8 8 0 1 1 21 12Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></>,
-    wrench: <><path d="M14.7 6.3a4.2 4.2 0 0 0-5.6 5.6L4 17l3 3 5.1-5.1a4.2 4.2 0 0 0 5.6-5.6l-2.3 2.3-2.6-.7-.7-2.6 2.6-2.3Z"/></>,
-    headset: <><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><path d="M4 13h3v6H5a1 1 0 0 1-1-1v-5ZM20 13h-3v6h2a1 1 0 0 0 1-1v-5Z"/><path d="M17 19c0 1.1-.9 2-2 2h-3"/></>,
-    spark: <><path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z"/><path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z"/></>,
-    mobile: <><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M10 5h4M11 18h2"/></>,
-    target: <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></>,
-    gear: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1L7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z"/></>
+    palette: <><circle cx="12" cy="12" r="9" /><circle cx="8" cy="9" r="1" /><circle cx="12" cy="7" r="1" /><circle cx="16" cy="9" r="1" /><path d="M15 16c0 1.4 1.2 2 2.3 1.5C19.6 16.5 21 14.6 21 12" /></>,
+    globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3.1 4.5 6.1 4.5 9S15 17.9 12 21M12 3C9 6.1 7.5 9.1 7.5 12S9 17.9 12 21" /></>,
+    server: <><rect x="4" y="4" width="16" height="6" rx="2" /><rect x="4" y="14" width="16" height="6" rx="2" /><path d="M8 7h.01M8 17h.01M12 7h5M12 17h5" /></>,
+    chat: <><path d="M21 12a8 8 0 0 1-8 8H7l-4 2 1.6-4A8 8 0 1 1 21 12Z" /><path d="M8 12h.01M12 12h.01M16 12h.01" /></>,
+    wrench: <><path d="M14.7 6.3a4.2 4.2 0 0 0-5.6 5.6L4 17l3 3 5.1-5.1a4.2 4.2 0 0 0 5.6-5.6l-2.3 2.3-2.6-.7-.7-2.6 2.6-2.3Z" /></>,
+    headset: <><path d="M4 13v-1a8 8 0 0 1 16 0v1" /><path d="M4 13h3v6H5a1 1 0 0 1-1-1v-5ZM20 13h-3v6h2a1 1 0 0 0 1-1v-5Z" /><path d="M17 19c0 1.1-.9 2-2 2h-3" /></>,
+    spark: <><path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z" /><path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" /></>,
+    mobile: <><rect x="7" y="2" width="10" height="20" rx="2" /><path d="M10 5h4M11 18h2" /></>,
+    target: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" /></>,
+    gear: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1L7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z" /></>
   };
   return <svg {...common}>{paths[name]}</svg>;
 };
 
 const stripItems = [
-  ["palette", "Design", "visual da sua marca"],
-  ["globe", "Domínio", "endereço profissional"],
-  ["server", "Hospedagem", "site rápido e online"],
-  ["chat", "WhatsApp", "contato imediato"],
-  ["wrench", "Manutenção", "ajustes contínuos"],
-  ["headset", "Suporte", "quando você precisar"]
-];
+["palette", "Design", "visual da sua marca"],
+["globe", "Domínio", "endereço profissional"],
+["server", "Hospedagem", "site rápido e online"],
+["chat", "WhatsApp", "contato imediato"],
+["wrench", "Manutenção", "ajustes contínuos"],
+["headset", "Suporte", "quando você precisar"]];
+
 
 const engineItems = [
-  ["spark", "Design profissional", "Identidade visual, composição e acabamento pensados para o segmento do cliente."],
-  ["gear", "Tudo incluído", "Domínio, hospedagem, SSL, manutenção e suporte trabalhando como uma única solução."],
-  ["mobile", "Pronto para celular", "Experiência confortável e responsiva em qualquer tamanho de tela."],
-  ["target", "Feito para gerar contato", "Chamadas para ação, formulários e WhatsApp levando o visitante para o próximo passo."]
-];
+["spark", "Design profissional", "Identidade visual, composição e acabamento pensados para o segmento do cliente."],
+["gear", "Tudo incluído", "Domínio, hospedagem, SSL, manutenção e suporte trabalhando como uma única solução."],
+["mobile", "Pronto para celular", "Experiência confortável e responsiva em qualquer tamanho de tela."],
+["target", "Feito para gerar contato", "Chamadas para ação, formulários e WhatsApp levando o visitante para o próximo passo."]];
+
 
 const examples = [
-  {
-    tag: "SAÚDE",
-    title: "Clínica Aurora",
-    text: "Leve, humana e acolhedora.",
-    image: "https://images.pexels.com/photos/4266936/pexels-photo-4266936.jpeg?cs=srgb&dl=pexels-cedric-fauntleroy-4266936.jpg&fm=jpg",
-    href: "/exemplos/clinica"
-  },
-  {
-    tag: "BARBEARIA",
-    title: "Black House",
-    text: "Vintage, elegante e marcante.",
-    image: "https://images.pexels.com/photos/12505400/pexels-photo-12505400.jpeg?cs=srgb&dl=pexels-theshuttervision-12505400.jpg&fm=jpg",
-    href: "/exemplos/barbearia"
-  },
-  {
-    tag: "RESTAURANTE",
-    title: "Casa Sapore",
-    text: "Chique, moderna e convidativa.",
-    image: "https://images.pexels.com/photos/5865286/pexels-photo-5865286.jpeg?cs=srgb&dl=pexels-rachel-claire-5865286.jpg&fm=jpg",
-    href: "/exemplos/restaurante"
-  },
-  {
-    tag: "COMÉRCIO LOCAL",
-    title: "Bosque Store",
-    text: "Sóbria, organizada e confiável.",
-    image: "https://images.pexels.com/photos/3738387/pexels-photo-3738387.jpeg?cs=srgb&dl=pexels-polina-tankilevitch-3738387.jpg&fm=jpg",
-    href: "/exemplos/comercio"
-  }
-];
+{
+  tag: "SAÚDE",
+  title: "Clínica Aurora",
+  text: "Leve, humana e acolhedora.",
+  image: "https://images.pexels.com/photos/4266936/pexels-photo-4266936.jpeg?cs=srgb&dl=pexels-cedric-fauntleroy-4266936.jpg&fm=jpg",
+  href: "/exemplos/clinica"
+},
+{
+  tag: "BARBEARIA",
+  title: "Black House",
+  text: "Vintage, elegante e marcante.",
+  image: "https://images.pexels.com/photos/12505400/pexels-photo-12505400.jpeg?cs=srgb&dl=pexels-theshuttervision-12505400.jpg&fm=jpg",
+  href: "/exemplos/barbearia"
+},
+{
+  tag: "RESTAURANTE",
+  title: "Casa Sapore",
+  text: "Chique, moderna e convidativa.",
+  image: "https://images.pexels.com/photos/5865286/pexels-photo-5865286.jpeg?cs=srgb&dl=pexels-rachel-claire-5865286.jpg&fm=jpg",
+  href: "/exemplos/restaurante"
+},
+{
+  tag: "COMÉRCIO LOCAL",
+  title: "Bosque Store",
+  text: "Sóbria, organizada e confiável.",
+  image: "https://images.pexels.com/photos/3738387/pexels-photo-3738387.jpeg?cs=srgb&dl=pexels-polina-tankilevitch-3738387.jpg&fm=jpg",
+  href: "/exemplos/comercio"
+}];
+
 
 const mosaic = [
-  ["https://images.pexels.com/photos/4266936/pexels-photo-4266936.jpeg?cs=srgb&dl=pexels-cedric-fauntleroy-4266936.jpg&fm=jpg", "Clínica"],
-  ["https://images.pexels.com/photos/12505400/pexels-photo-12505400.jpeg?cs=srgb&dl=pexels-theshuttervision-12505400.jpg&fm=jpg", "Barbearia"],
-  ["https://images.pexels.com/photos/5865286/pexels-photo-5865286.jpeg?cs=srgb&dl=pexels-rachel-claire-5865286.jpg&fm=jpg", "Restaurante"],
-  ["https://images.pexels.com/photos/3738387/pexels-photo-3738387.jpeg?cs=srgb&dl=pexels-polina-tankilevitch-3738387.jpg&fm=jpg", "Comércio"]
-];
+["https://images.pexels.com/photos/4266936/pexels-photo-4266936.jpeg?cs=srgb&dl=pexels-cedric-fauntleroy-4266936.jpg&fm=jpg", "Clínica"],
+["https://images.pexels.com/photos/12505400/pexels-photo-12505400.jpeg?cs=srgb&dl=pexels-theshuttervision-12505400.jpg&fm=jpg", "Barbearia"],
+["https://images.pexels.com/photos/5865286/pexels-photo-5865286.jpeg?cs=srgb&dl=pexels-rachel-claire-5865286.jpg&fm=jpg", "Restaurante"],
+["https://images.pexels.com/photos/3738387/pexels-photo-3738387.jpeg?cs=srgb&dl=pexels-polina-tankilevitch-3738387.jpg&fm=jpg", "Comércio"]];
 
-function Home() {
-  const plans=publicPlans();
-  const entry=plans.filter(p=>p.active&&p.monthly_price_cents!=null).sort((a,b)=>a.monthly_price_cents-b.monthly_price_cents)[0];
+
+async function Home() {
+  const plans = await publicPlans();
+  const entry = plans.filter((p) => p.active && p.monthly_price_cents != null).sort((a, b) => a.monthly_price_cents - b.monthly_price_cents)[0];
   return (
     <main className="home">
-      <Navigation commercial/>
+      <Navigation commercial />
 
       <section className="heroV9">
         <div className="heroV9Image" />
@@ -133,8 +133,8 @@ function Home() {
 
       <section className="serviceStripV12">
         <div className="serviceRail">
-          {stripItems.map(([icon, title, text], index) => (
-            <article key={title} className="serviceChip">
+          {stripItems.map(([icon, title, text], index) =>
+          <article key={title} className="serviceChip">
               <div className="serviceIcon"><Icon name={icon} /></div>
               <div className="serviceChipText">
                 <strong>{title}</strong>
@@ -142,7 +142,7 @@ function Home() {
               </div>
               {index < stripItems.length - 1 && <div className="serviceConnector" />}
             </article>
-          ))}
+          )}
         </div>
       </section>
 
@@ -161,14 +161,14 @@ function Home() {
           </div>
 
           <div className="mechanismGrid">
-            {engineItems.map(([icon, title, text], index) => (
-              <article key={title} className="mechanismCard">
+            {engineItems.map(([icon, title, text], index) =>
+            <article key={title} className="mechanismCard">
                 <div className="mechanismNumber">0{index + 1}</div>
                 <div className="mechanismIcon"><Icon name={icon} size={28} /></div>
                 <h3>{title}</h3>
                 <p>{text}</p>
               </article>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -186,8 +186,8 @@ function Home() {
         </div>
 
         <div className="portfolioV12Grid">
-          {examples.map((item) => (
-            <a className="portfolioV12Card" href={item.href} key={item.title}>
+          {examples.map((item) =>
+          <a className="portfolioV12Card" href={item.href} key={item.title}>
               <div className="portfolioV12Image">
                 <img src={item.image} alt={item.title} />
                 <span className="portfolioV12Tag">{item.tag}</span>
@@ -200,7 +200,7 @@ function Home() {
                 <div className="portfolioV12Arrow">↗</div>
               </div>
             </a>
-          ))}
+          )}
         </div>
       </section>
 
@@ -218,17 +218,17 @@ function Home() {
           </div>
 
           <div className="matchMosaicV12">
-            {mosaic.map(([img, label]) => (
-              <div className="mosaicCardV12" key={label}>
+            {mosaic.map(([img, label]) =>
+            <div className="mosaicCardV12" key={label}>
                 <img src={img} alt={label} />
                 <span>{label}</span>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
 
-      <QuarterlyReview/>
+      <QuarterlyReview />
 
       <section id="planos" className="plansSection">
         <div className="sectionIntro center">
@@ -237,7 +237,7 @@ function Home() {
           <p>Tenha um site profissional para conquistar novos clientes, com criação incluída e planos mensais acessíveis.</p>
         </div>
 
-        <PlanCards home/>
+        <PlanCards home />
 
         <p className="legalNote">* Domínio sujeito à disponibilidade e às condições do plano.</p>
       </section>
@@ -268,15 +268,15 @@ function Home() {
         <div className="finalCtaPortrait">
           <img
             src="https://images.pexels.com/photos/3760263/pexels-photo-3760263.jpeg?cs=srgb&dl=pexels-olly-3760263.jpg&fm=jpg"
-            alt="Profissional atendendo cliente"
-          />
+            alt="Profissional atendendo cliente" />
+
         </div>
       </section>
 
-      <section className="homeContactForm"><div><span className="eyebrow">DO SEU JEITO, DESDE O INÍCIO</span><h2>Conte sua ideia.<br/>Vamos dar o próximo passo.</h2><p>Um espaço para entender seu negócio e a presença que você quer construir.</p></div><ContactForm options={[...plans.map(plan=>plan.name), "Quero orientação"]}/></section>
-      <Footer/>
-    </main>
-  );
+      <section className="homeContactForm"><div><span className="eyebrow">DO SEU JEITO, DESDE O INÍCIO</span><h2>Conte sua ideia.<br />Vamos dar o próximo passo.</h2><p>Um espaço para entender seu negócio e a presença que você quer construir.</p></div><ContactForm options={[...plans.map((plan) => plan.name), "Quero orientação"]} /></section>
+      <Footer />
+    </main>);
+
 }
 
-export default function PageWithSEO(props) { return <><StructuredData path="/" title={metadata.title} description={metadata.description} service={false}/><Home {...props}/></>; }
+export default function PageWithSEO(props) {return <><StructuredData path="/" title={metadata.title} description={metadata.description} service={false} /><Home {...props} /></>;}

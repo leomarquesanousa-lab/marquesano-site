@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from 'next/server';
-import { adminStore, configured, cookieName, canAccess } from './app/server/admin/core.mjs';
+import { adminStore, configured, cookieName, canAccess, adminDiagnostic } from './app/server/admin/core.mjs';
 
-export function proxy(request) {
+export async function proxy(request) {
   const path = request.nextUrl.pathname;
   const api = path === '/api/admin' || path.startsWith('/api/admin/');
   const publicLogin = (path === '/admin/login' && ['GET', 'HEAD'].includes(request.method)) || (path === '/api/admin/login' && request.method === 'POST');
@@ -18,7 +18,7 @@ export function proxy(request) {
   if (path === '/api/admin/meta/callback' && request.method === 'GET') return finish(NextResponse.next());
   if (publicLogin) return finish(NextResponse.next());
   let user = null;
-  try { if (configured()) user = adminStore().getSession(request.cookies.get(cookieName())?.value); } catch {}
+  try { if (configured()) user = await (await adminStore()).getSession(request.cookies.get(cookieName())?.value); } catch (error) { adminDiagnostic('ADMIN_SESSION_FAILED', error); }
   if (!user) return finish(api ? NextResponse.json({ error: 'Authentication required.' }, { status: 401 }) : NextResponse.redirect(new URL('/admin/login', request.url)));
   const routeModule = path.split('/')[api ? 3 : 2];
   const module = api && routeModule === 'meta' ? 'configuracoes' : routeModule;

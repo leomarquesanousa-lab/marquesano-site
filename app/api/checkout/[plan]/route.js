@@ -1,18 +1,20 @@
-import { adminStore, configured } from '../../../server/admin/core.mjs';
-import { directCheckout } from '../../../server/admin/direct-checkout.mjs';
-import { InputError, isInputError } from '../../../server/admin/validation.mjs';
+import { checkoutStore } from '../../../server/checkout.mjs';
+import { cardCheckout, receiptCookie } from '../../../server/admin/card-checkout.mjs';
+import { cookies } from 'next/headers';
+import { isInputError } from '../../../server/admin/validation.mjs';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 const json = (data, status = 200) => Response.json(data, {
-  status, headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' },
+  status, headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' }
 });
 
 export async function POST(request, { params }) {
   try {
-    if (!configured()) throw new InputError('Plano temporariamente indisponível', 503);
     const { plan } = await params;
-    return json(await directCheckout(request, plan, adminStore().repository.plans));
+    const result = await cardCheckout(request, plan, (await checkoutStore()).repository);
+    (await cookies()).set(receiptCookie, result.receipt, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/checkout', maxAge: 86400 });
+    return json({ url: result.url });
   } catch (error) {
     return json({ error: isInputError(error) ? error.message : 'Plano temporariamente indisponível' }, isInputError(error) ? error.status : 503);
   }

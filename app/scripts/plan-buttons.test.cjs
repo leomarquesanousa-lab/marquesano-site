@@ -20,7 +20,7 @@ test('home and plans cards pass the correct public code to each direct checkout 
     '../config/checkout-plans.mjs': { checkoutPlans },
   });
   for (const home of [true, false]) {
-    const articles = Cards({ home }).props.children;
+    const articles = (await Cards({ home })).props.children;
     assert.deepEqual(articles.map(article => {
       const button = article.props.children.find(child => child?.type === Button);
       return [button.props.name, button.props.code, button.props.revision];
@@ -28,40 +28,15 @@ test('home and plans cards pass the correct public code to each direct checkout 
   }
 });
 
-test('button sends only revision, blocks duplicate clicks, shows loading and redirects directly', async t => {
-  let resolve;
-  const calls = [], redirects = [], state = [];
-  let cursor = 0;
-  const ref = { current: false };
+test('each CTA links to the single local checkout and keeps its visual classes', () => {
   const Button = load('components/PlanCheckoutButton.js', {
-    react: { useRef: () => ref, useState: initial => {
-      const index = cursor++;
-      if (!(index in state)) state[index] = initial;
-      return [state[index], value => { state[index] = value; }];
-    } }, './PlanCheckoutButton.module.css': { __esModule: true, default: {} },
+    'next/link': { __esModule: true, default: 'a' },
+    './PlanCheckoutButton.module.css': { __esModule: true, default: { button: 'button' } },
   });
-  const originalFetch = global.fetch, originalWindow = global.window;
-  t.after(() => { global.fetch = originalFetch; global.window = originalWindow; });
-  global.fetch = (...args) => { calls.push(args); return new Promise(done => { resolve = done; }); };
-  global.window = { location: { assign: url => redirects.push(url) } };
-  const render = () => { cursor = 0; return Button({ code: 'professional', name: 'Professional', revision: 5, className: 'refinedBtn' }).props.children; };
-  const click = render()[0].props.onClick;
-  const first = click();
-  await click();
-  assert.equal(calls.length, 1);
-  assert.equal(calls[0][0], '/api/checkout/professional');
-  assert.deepEqual(JSON.parse(calls[0][1].body), { revision: 5 });
-  assert.equal(render()[0].props.disabled, true);
-  assert.equal(render()[0].props.children[0], 'Iniciando…');
-  resolve({ ok: true, json: async () => ({ url: 'https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=test' }) });
-  await first;
-  assert.equal(redirects.length, 1);
-  ref.current = false;
-  const failure = render()[0].props.onClick();
-  resolve({ ok: false, json: async () => ({ error: 'Plano temporariamente indisponível' }) });
-  await failure;
-  assert.equal(render()[1].props.role, 'alert');
-  assert.equal(render()[1].props.children, 'Plano temporariamente indisponível');
-  assert.equal(render()[0].props.disabled, false);
-  assert.equal(redirects.length, 1);
+  for (const [code, name] of [['basico', 'Básico'], ['professional', 'Professional'], ['business', 'Business']]) {
+    const result = Button({ code, name, className: 'refinedBtn primary', children: 'arrow' });
+    assert.equal(result.props.href, '/checkout/' + code);
+    assert.equal(result.props.className, 'refinedBtn primary button');
+    assert.ok(result.props.children.includes(name));
+  }
 });
