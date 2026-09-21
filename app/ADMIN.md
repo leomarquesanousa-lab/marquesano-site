@@ -49,8 +49,11 @@ Provisionamento de produção sem SSH:
    O usuário permanece no SQLite; o arquivo precisa estar em armazenamento persistente.
 
 A verificação e a inserção usam a mesma conexão, dentro de `BEGIN IMMEDIATE`.
-Qualquer usuário existente, inclusive inativo, impede o provisionamento automático.
-Não há alteração de senha, role ou usuário existente. Banco vazio sem variáveis válidas
+Com as duas variáveis definidas, o OWNER é criado somente se o e-mail configurado
+não existir, mesmo que haja outros usuários. A comparação ignora maiúsculas/minúsculas.
+Um usuário com esse e-mail, inclusive inativo, é preservado integralmente.
+Não há alteração de senha, role ou usuário existente. As variáveis podem ser removidas
+após o login; um banco já inicializado continua funcionando. Banco vazio sem variáveis válidas
 recusa a inicialização; os logs do servidor indicam a variável inválida sem mostrar seu valor.
 Esse mecanismo não confirma o volume montado pela hospedagem: o processo utiliza exatamente
 o `ADMIN_DATABASE_PATH` recebido em runtime, sem caminho alternativo.

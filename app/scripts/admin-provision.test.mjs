@@ -18,7 +18,7 @@ test('empty database provisions exactly one active OWNER who authenticates; repe
     assert.equal(user.role, 'OWNER');
     assert.equal(store.ensureInitialOwner(env), false);
     assert.equal(store.ensureInitialOwner({}), false);
-    assert.equal(store.ensureInitialOwner({ ADMIN_INITIAL_OWNER_EMAIL: 'bad', ADMIN_INITIAL_OWNER_PASSWORD_HASH: 'bad' }), false);
+    assert.equal(store.ensureInitialOwner({ ...env, ADMIN_INITIAL_OWNER_PASSWORD_HASH: 'ignored-for-existing-email' }), false);
     assert.deepEqual(await store.authenticate('owner@example.com', password), user);
   } finally { store.close(); }
 });
@@ -33,7 +33,7 @@ test('invalid email, hash and missing variables refuse provisioning without inse
   } finally { store.close(); }
 });
 
-test('adminStore initializes and authenticates against the same persistent path; next startup needs no env secrets', async () => {
+test('adminStore preserves an old user, provisions a different OWNER, and never duplicates on subsequent startups', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'admin-provision-'));
   const filename = join(dir, 'admin.sqlite');
   const keys = ['ADMIN_DATABASE_PATH', 'ADMIN_SITE_ORIGIN', ...Object.keys(env)];
@@ -41,16 +41,28 @@ test('adminStore initializes and authenticates against the same persistent path;
   const key = Symbol.for('marquesano.admin.store');
   assert.equal(globalThis[key], undefined);
   try {
+    const oldStore = createAdminStore(filename);
+    await oldStore.createOwner('old@example.com', password);
+    oldStore.close();
+    const db = new DatabaseSync(filename);
+    const oldUser = db.prepare('SELECT * FROM users WHERE email=?').get('old@example.com');
     Object.assign(process.env, env, { ADMIN_DATABASE_PATH: filename, ADMIN_SITE_ORIGIN: 'https://marquesano.com.br' });
     const first = adminStore();
     assert.ok(await first.authenticate('owner@example.com', password));
     first.close(); delete globalThis[key];
-    const db = new DatabaseSync(filename);
     const before = db.prepare('SELECT * FROM users').all();
-    assert.equal(before.length, 1); assert.equal(before[0].active, 1);
-    // Any existing user, even inactive and non-OWNER, must prevent provisioning.
-    db.prepare("UPDATE users SET role='VIEWER',active=0").run();
+    assert.equal(before.length, 2);
+    assert.equal(before.find(user=>user.email==='owner@example.com').active, 1);
+    assert.deepEqual(db.prepare('SELECT * FROM users WHERE email=?').get('old@example.com'), oldUser);
+    adminStore();
+    assert.deepEqual(db.prepare('SELECT * FROM users').all(), before);
+    globalThis[key].close(); delete globalThis[key];
+    // Matching email is never modified, even if inactive, differently cased or non-OWNER.
+    db.prepare("UPDATE users SET email='OWNER@example.com',role='VIEWER',active=0 WHERE email='owner@example.com'").run();
     const existing = db.prepare('SELECT * FROM users').all();
+    adminStore();
+    assert.deepEqual(db.prepare('SELECT * FROM users').all(), existing);
+    globalThis[key].close(); delete globalThis[key];
     delete process.env.ADMIN_INITIAL_OWNER_EMAIL; delete process.env.ADMIN_INITIAL_OWNER_PASSWORD_HASH;
     adminStore();
     assert.deepEqual(db.prepare('SELECT * FROM users').all(), existing);

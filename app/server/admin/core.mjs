@@ -58,11 +58,12 @@ export function createAdminStore(filename, now = Date.now) {
     close: () => db.close(),
     ensureInitialOwner(env = process.env) {
       return transaction(() => {
-        if (db.prepare('SELECT COUNT(*) AS count FROM users').get().count > 0) return false;
         const email = typeof env.ADMIN_INITIAL_OWNER_EMAIL === 'string' ? env.ADMIN_INITIAL_OWNER_EMAIL.trim().toLowerCase() : '';
         const hash = env.ADMIN_INITIAL_OWNER_PASSWORD_HASH;
-        if (!email || !hash) throw Error('Provisionamento administrativo: configure ADMIN_INITIAL_OWNER_EMAIL e ADMIN_INITIAL_OWNER_PASSWORD_HASH para o banco vazio.');
+        if (!email && !hash && db.prepare('SELECT COUNT(*) AS count FROM users').get().count > 0) return false;
+        if (!email || !hash) throw Error('Provisionamento administrativo: configure ADMIN_INITIAL_OWNER_EMAIL e ADMIN_INITIAL_OWNER_PASSWORD_HASH para provisionar o OWNER.');
         if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) || email.length > 254) throw Error('Provisionamento administrativo: ADMIN_INITIAL_OWNER_EMAIL inválido.');
+        if (db.prepare('SELECT id FROM users WHERE email=? COLLATE NOCASE').get(email)) return false;
         if (typeof hash !== 'string' || !/^scrypt\$[a-f0-9]{32}\$[a-f0-9]{128}$/.test(hash)) throw Error('Provisionamento administrativo: ADMIN_INITIAL_OWNER_PASSWORD_HASH inválido; gere o hash com admin-password-hash.mjs.');
         db.prepare('INSERT INTO users (id,email,password_hash,role,active) VALUES (?,?,?,?,1)').run(randomBytes(16).toString('hex'), email, hash, 'OWNER');
         return true;
