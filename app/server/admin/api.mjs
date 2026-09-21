@@ -4,6 +4,7 @@ import { operations } from './operations.mjs';
 import { isInputError } from './validation.mjs';
 import { handleMetaApi } from './meta-api.mjs';
 import { paymentOperations } from './payment-api.mjs';
+import { validAdminRequestOrigin } from './origin.mjs';
 
 const json = (body, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' } });
 export async function handleAdminApi(request, path, dependencies = {}) {
@@ -18,7 +19,7 @@ export async function handleAdminApi(request, path, dependencies = {}) {
     if (path[0] === 'meta') return handleMetaApi(request, path.slice(1), store, env, { fetcher: dependencies.fetcher || fetch });
     const token = request.cookies.get(cookieName(env))?.value;
     // All unsafe requests, including login/logout, require the configured origin.
-    if (!['GET', 'HEAD'].includes(request.method) && request.headers.get('origin') !== env.ADMIN_SITE_ORIGIN) return json({ error: 'Origem inválida.' }, 403);
+    if (!['GET', 'HEAD'].includes(request.method) && !validAdminRequestOrigin(request, env)) return json({ error: 'Origem inválida.' }, 403);
     if (action === 'login' && request.method === 'POST') {
       if (!request.headers.get('content-type')?.startsWith('application/json')) return json({ error: 'Formato inválido.' }, 415);
       if (Number(request.headers.get('content-length')) > 2048) return json({ error: 'Requisição inválida.' }, 413);

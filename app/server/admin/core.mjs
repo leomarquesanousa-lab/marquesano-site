@@ -1,5 +1,6 @@
 import { openPostgres, databaseUrlIssue } from './postgres.mjs';
 import { adminDiagnostic } from './diagnostics.mjs';
+import { adminOrigin } from './origin.mjs';
 import { randomBytes, scrypt as scryptCallback, timingSafeEqual, createHash } from 'node:crypto';
 import { promisify } from 'node:util';
 import { migrate } from './migrations.mjs';
@@ -33,8 +34,7 @@ export function configured(env = process.env) {
   const issue = databaseUrlIssue(env.DATABASE_URL);
   if (issue) { adminDiagnostic(issue); return false; }
   try {
-    const origin = new URL(env.ADMIN_SITE_ORIGIN);
-    const valid = origin.origin === env.ADMIN_SITE_ORIGIN && (origin.protocol === 'https:' || env.NODE_ENV !== 'production' && origin.protocol === 'http:');
+    const valid = Boolean(adminOrigin(env));
     adminDiagnostic(valid ? 'ADMIN_CONFIG_OK' : 'ADMIN_SITE_ORIGIN_INVALID');
     return valid;
   } catch { adminDiagnostic('ADMIN_SITE_ORIGIN_INVALID'); return false; }
