@@ -125,3 +125,7 @@ A migração 6 repõe registros ausentes com `ON CONFLICT DO NOTHING`, preservan
 A Public Key é passada por props do Server Component. O CardForm renderiza independentemente do estado ativo e do ID sincronizado, desde que existam preço real e Public Key. Apenas o backend decide se a contratação pode prosseguir. Os logs `CHECKOUT_LOCAL_PLAN` e `CHECKOUT_LOCAL_CARDFORM` mostram código público e booleanos, somente em desenvolvimento.
 
 Para verificar visualmente as três páginas com Chrome/Edge instalado, sem preencher ou enviar cartão: `node app/scripts/checkout-visual-check.mjs`. Inicie o servidor na porta 3000 antes. O script bloqueia requisições de contratação e salva capturas desktop/mobile em uma pasta temporária. Os valores esperados no teste correspondem aos preços recuperados do backup local, não são defaults de cobrança.
+
+## Public payment URLs
+
+Configure `MERCADOPAGO_SITE_ORIGIN=https://marquesano.com.br` on the server (including Hostinger). This controls Mercado Pago back_url and the displayed webhook URL. It has no fallback to ADMIN_SITE_ORIGIN. Local checkout at http://localhost:3000 uses the same CSRF policy with an explicit development origin; production accepts only the two Marquesano HTTPS origins. Restart the local server after changing environment configuration.

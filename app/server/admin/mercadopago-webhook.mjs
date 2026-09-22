@@ -1,3 +1,4 @@
+import { paymentSiteOrigin } from './payment-origin.mjs';
 import { createHmac, timingSafeEqual, createHash } from 'node:crypto';
 import { adminStore, configured } from './core.mjs';
 import { InputError, isInputError, readJson } from './validation.mjs';
@@ -18,7 +19,7 @@ const status = (value) => {if (typeof value !== 'string' || !/^[a-z_]{1,60}$/.te
 
 export function webhookConfiguration(env = process.env) {
   let url = null;
-  try {const origin = new URL(env.ADMIN_SITE_ORIGIN);if (origin.protocol === 'https:' && origin.origin === env.ADMIN_SITE_ORIGIN) url = origin.origin + '/api/mercadopago/webhook';} catch {}
+  try {url = paymentSiteOrigin(env) + '/api/mercadopago/webhook';} catch {}
   return { configured: Boolean(url && env.MERCADOPAGO_ACCESS_TOKEN?.trim() && env.MERCADOPAGO_WEBHOOK_SECRET?.trim()), secret_configured: Boolean(env.MERCADOPAGO_WEBHOOK_SECRET?.trim()), url };
 }
 

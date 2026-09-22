@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import { paymentConfiguration, testPaymentConnection } from '../server/admin/payment-connection.mjs';
 import { paymentOperations } from '../server/admin/payment-api.mjs';
 
-const env={ADMIN_SITE_ORIGIN:'https://marquesano.com.br',MERCADOPAGO_ACCESS_TOKEN:'private-token',MERCADOPAGO_PUBLIC_KEY:'private-key',MERCADOPAGO_WEBHOOK_SECRET:'private-secret'};
+const env={MERCADOPAGO_SITE_ORIGIN:'https://marquesano.com.br',MERCADOPAGO_ACCESS_TOKEN:'private-token',MERCADOPAGO_PUBLIC_KEY:'private-key',MERCADOPAGO_WEBHOOK_SECRET:'private-secret'};
 test('configuration exposes presence only and diagnoses invalid HTTPS origin',()=>{
   const config=paymentConfiguration(env);
   assert.equal(config.access_token,true);assert.equal(config.public_key,true);assert.equal(config.webhook_secret,true);
   assert.equal(config.webhook_url,'https://marquesano.com.br/api/mercadopago/webhook');
   assert.equal(config.configuration_error,null);
   assert.ok(!JSON.stringify(config).includes('private-'));
-  assert.ok(paymentConfiguration({...env,ADMIN_SITE_ORIGIN:'http://localhost:3000'}).configuration_error);
+  assert.ok(paymentConfiguration({...env,MERCADOPAGO_SITE_ORIGIN:'http://localhost:3000'}).configuration_error);
 });
 test('real request contract uses bearer on official read-only subscription search',async()=>{
   const result=await testPaymentConnection({env,fetcher:async(url,options)=>{

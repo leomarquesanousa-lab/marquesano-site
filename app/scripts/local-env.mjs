@@ -11,7 +11,7 @@ export function loadLocalCheckoutEnv() {
   const file = new URL('../.env', import.meta.url);
   if (!existsSync(file)) return;
   const fallback = parseEnv(readFileSync(file, 'utf8'));
-  for (const key of ['DATABASE_URL', 'ADMIN_SITE_ORIGIN', 'MERCADOPAGO_PUBLIC_KEY', 'MERCADOPAGO_ACCESS_TOKEN']) {
+  for (const key of ['DATABASE_URL', 'ADMIN_SITE_ORIGIN', 'MERCADOPAGO_SITE_ORIGIN', 'MERCADOPAGO_PUBLIC_KEY', 'MERCADOPAGO_ACCESS_TOKEN']) {
     if (!process.env[key] && fallback[key]) process.env[key] = fallback[key];
   }
 }

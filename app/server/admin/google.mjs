@@ -48,7 +48,7 @@ async function token(scope,env,fetcher) {
   const data=await response.json();if(!data.access_token)throw Object.assign(Error('Authentication'),{auth:true});
   if(tokenCache.size>10)tokenCache.clear();tokenCache.set(key,{value:data.access_token,until:Date.now()+Math.min(Number(data.expires_in)||3600,3600)*1000-60000});return data.access_token;
 }
-export async function googleReport(provider,settings,period,{env=process.env,fetcher=fetch}={}) {
+export async function googleReport(provider,settings,period,{env=process.env,fetcher=fetch,trace}={}) {
   const initial=integrationStatus(settings,env)[provider];
   if(initial?.status!=='Configurado')return {status:'Não configurado',reports:null};
   try {
@@ -56,6 +56,7 @@ export async function googleReport(provider,settings,period,{env=process.env,fet
     const access=await token(scope,env,fetcher);
     async function post(url,body) {
       const response=await fetcher(url,{method:'POST',headers:{Authorization:`Bearer ${access}`,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});
+      if(provider==='ga4' && trace) console.info('GA4_RUN_REPORT_HTTP', { trace, http_status: response.status, dimensions: body.dimensions.map(item=>item.name), metrics: body.metrics.map(item=>item.name) });
       if(!response.ok) {
         const error=await providerError(response,provider);
         if(provider==='gsc'&&error.code==='ACCESS_DENIED') {
@@ -72,7 +73,9 @@ export async function googleReport(provider,settings,period,{env=process.env,fet
         }
         throw error;
       }
-      return response.json();
+      const result = await response.json();
+      if(provider==='ga4' && trace) console.info('GA4_RUN_REPORT_ROWS', { trace, rows: Array.isArray(result.rows) ? result.rows.length : 0, row_count: result.rowCount || 0 });
+      return result;
     }
     if(provider==='ga4') {
       const groups={summary:[],timeline:['date'],acquisition:['sessionSource','sessionMedium','sessionCampaignName'],pages:['pagePath'],devices:['deviceCategory'],countries:['country'],events:['eventName']};
@@ -89,6 +92,7 @@ export async function googleReport(provider,settings,period,{env=process.env,fet
     })));
     return {status:'Ativo',reports};
   } catch(error) {
+    if(provider==='ga4' && trace) console.error('GA4_REPORT_FAILED', { trace, http_status: error.httpStatus || null, code: error.code || 'CONNECTION_ERROR' });
     const messages={400:'O Google recusou a consulta. Confira o identificador da propriedade e o período.',401:'O Google recusou a autenticação. Confira a Service Account no servidor.',403:'Acesso negado pelo Google. Confira as permissões da Service Account e se a API está habilitada.',404:'Propriedade não encontrada no Google. Confira o identificador salvo.',429:'Limite de consultas do Google atingido. Aguarde e tente novamente.'};
     const message=diagnostics[error.code] || messages[error.httpStatus] || (error.auth?'Confira as credenciais no servidor e o acesso da conta de serviço à propriedade.':['TimeoutError','AbortError'].includes(error.name)?'O Google demorou para responder. Tente novamente.':'Não foi possível consultar a API oficial. Tente novamente.');
     return {status:error.auth?'Erro de autenticação':'Erro de conexão',reports:null,code:error.code||'CONNECTION_ERROR',message};

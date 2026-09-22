@@ -7,7 +7,7 @@ import { cookieName } from '../server/admin/core.mjs';
 import { handleMercadoPagoWebhook, webhookConfiguration } from '../server/admin/mercadopago-webhook.mjs';
 import { handleAdminApi } from '../server/admin/api.mjs';
 
-const env = { NODE_ENV: 'production', ADMIN_SITE_ORIGIN: 'https://marquesano.com.br', DATABASE_URL: 'postgresql://isolated/test', MERCADOPAGO_ACCESS_TOKEN: 'mock-access-token', MERCADOPAGO_WEBHOOK_SECRET: 'mock-webhook-secret' };
+const env = { NODE_ENV: 'production', MERCADOPAGO_SITE_ORIGIN: 'https://marquesano.com.br', ADMIN_SITE_ORIGIN: 'https://marquesano.com.br', DATABASE_URL: 'postgresql://isolated/test', MERCADOPAGO_ACCESS_TOKEN: 'mock-access-token', MERCADOPAGO_WEBHOOK_SECRET: 'mock-webhook-secret' };
 const stamp = '2026-09-20T10:00:00Z';
 function notification(type, id, { secret = env.MERCADOPAGO_WEBHOOK_SECRET, body = {}, query = id, requestId = 'request-1', ts = '1789900000', signature } = {}) {
   const hash = createHmac('sha256', secret).update(`id:${String(query).toLowerCase()};request-id:${requestId};ts:${ts};`).digest('hex');

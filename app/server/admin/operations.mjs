@@ -3,9 +3,11 @@ import { InputError, readJson, range, text } from './validation.mjs';
 import { googleReport, integrationStatus, testGoogleConnection } from './google.mjs';
 import { seoDiagnostics, publishedSeoStatus } from '../seo.mjs';
 import { metaStatus } from './meta.mjs';
+import { randomUUID } from 'node:crypto';
 
 export async function operations(request, path, user, repository, { env = process.env } = {}) {
   const [module, id, action] = path;
+  if (request.method === 'GET' && ['dashboard', 'analytics'].includes(module)) console.info('ANALYTICS_RECEIVED', { module });
   if (!canAccess(user.role, module) || path.length > 3) throw new InputError('Acesso não permitido.', 403);
   const params = new URL(request.url).searchParams,period = range(params);
   const settings = await repository.settings(),integrations = integrationStatus(settings);
@@ -14,7 +16,19 @@ export async function operations(request, path, user, repository, { env = proces
     if (module === 'configuracoes' && id === 'meta') return await metaStatus(env, repository.meta);
     if (id) return await repository.detail(module, text(id, 100, true));
     if (module === 'marketing') return { ...(await repository.report(period)), settings, integrations, meta: await metaStatus(env, repository.meta), googleAds: { status: 'Integração futura' } };
-    if (['dashboard', 'analytics'].includes(module)) return { ...(await repository.report(period)), settings, integrations, ...(params.get('remote') === '1' ? { google: await googleReport('ga4', settings, period) } : {}) };
+    if (['dashboard', 'analytics'].includes(module)) {
+      const trace = randomUUID();
+      console.info('ANALYTICS_REQUEST', { trace, module, remote: params.get('remote') === '1', property_available: Boolean(settings.GA4_PROPERTY_ID), service_account_available: Boolean(process.env.GOOGLE_CLIENT_EMAIL && process.env.GOOGLE_PRIVATE_KEY), start: period.start, end: period.end });
+      try {
+        const result = { ...(await repository.report(period)), settings, integrations, ...(params.get('remote') === '1' ? { google: await googleReport('ga4', settings, period, { trace }) } : {}) };
+        const summary = result.google?.reports?.summary;
+        console.info('ANALYTICS_RESPONSE', { trace, status: result.google?.status || 'remote_not_requested', code: result.google?.code, rows: summary?.rowCount || 0, aggregates: Object.fromEntries(['activeUsers', 'sessions', 'screenPageViews'].map(key => [key, summary ? Number(summary.rows[0]?.[summary.columns.indexOf(key)] || 0) : null])) });
+        return result;
+      } catch (error) {
+        console.error('ANALYTICS_FAILED', { trace, name: ['Error', 'TypeError', 'RangeError'].includes(error.name) ? error.name : 'Error' });
+        throw error;
+      }
+    }
     if (module === 'seo') return { ...seoDiagnostics(), integrations, ...(params.get('diagnose') === '1' ? { published: await publishedSeoStatus() } : {}), ...(params.get('remote') === '1' ? { google: await googleReport('gsc', settings, period) } : {}) };
     if (module === 'configuracoes') return { settings, integrations, meta: await metaStatus(env, repository.meta) };
     return await repository.list(module, params, period);

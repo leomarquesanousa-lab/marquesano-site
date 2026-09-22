@@ -16,7 +16,7 @@ test('real HTTP POSTs use production origin rules in both checkout route handler
   const repository = new Proxy({}, { get() { throw Error('Unexpected persistence access'); } });
   globalThis[key] = Promise.resolve({ repository });
   process.env.NODE_ENV = 'production';
-  process.env.ADMIN_SITE_ORIGIN = 'https://marquesano.com.br/';
+  process.env.MERCADOPAGO_SITE_ORIGIN = 'https://marquesano.com.br/';
   process.env.DATABASE_URL = 'postgresql://unused/test';
   let server;
   try {
@@ -60,7 +60,7 @@ test('real HTTP POSTs use production origin rules in both checkout route handler
     if (server) await new Promise(resolve => server.close(resolve));
     hooks.deregister();
     if (previousStore === undefined) delete globalThis[key]; else globalThis[key] = previousStore;
-    for (const name of ['NODE_ENV', 'ADMIN_SITE_ORIGIN', 'DATABASE_URL']) {
+    for (const name of ['NODE_ENV', 'MERCADOPAGO_SITE_ORIGIN', 'DATABASE_URL']) {
       if (saved[name] === undefined) delete process.env[name]; else process.env[name] = saved[name];
     }
   }

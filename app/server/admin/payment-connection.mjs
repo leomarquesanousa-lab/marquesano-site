@@ -7,7 +7,7 @@ export function paymentConfiguration(env = process.env) {
     public_key: Boolean(env.MERCADOPAGO_PUBLIC_KEY?.trim()),
     webhook_secret: webhook.secret_configured,
     webhook_url: webhook.url,
-    configuration_error: webhook.url ? null : 'Configuração incompleta: defina ADMIN_SITE_ORIGIN como a origem HTTPS pública, sem barra final.',
+    configuration_error: webhook.url ? null : 'Configuração incompleta: defina MERCADOPAGO_SITE_ORIGIN como a origem HTTPS pública, sem barra final.',
   };
 }
 

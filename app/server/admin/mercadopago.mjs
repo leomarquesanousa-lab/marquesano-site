@@ -1,11 +1,10 @@
 import { InputError } from './validation.mjs';
+import { paymentSiteOrigin } from './payment-origin.mjs';
+import { paymentDiagnostic } from './payment-diagnostics.mjs';
 
 function credentials(env) {
   if (!env.MERCADOPAGO_ACCESS_TOKEN?.trim()) throw new InputError('Configure MERCADOPAGO_ACCESS_TOKEN no servidor.', 503);
-  let origin;
-  try {origin = new URL(env.ADMIN_SITE_ORIGIN);} catch {throw new InputError('Configure ADMIN_SITE_ORIGIN no servidor.', 503);}
-  if (origin.protocol !== 'https:' || origin.origin !== env.ADMIN_SITE_ORIGIN) throw new InputError('Mercado Pago requer ADMIN_SITE_ORIGIN com HTTPS.', 503);
-  return { token: env.MERCADOPAGO_ACCESS_TOKEN, origin: origin.origin };
+  return { token: env.MERCADOPAGO_ACCESS_TOKEN, origin: paymentSiteOrigin(env) };
 }
 
 export async function mpRequest(path, { env = process.env, fetcher = fetch, method = 'GET', body } = {}) {
@@ -14,12 +13,18 @@ export async function mpRequest(path, { env = process.env, fetcher = fetch, meth
   try {
     response = await fetcher('https://api.mercadopago.com' + path, { method, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(15000), cache: 'no-store', redirect: 'error' });
   } catch {throw new InputError('Mercado Pago não respondeu. Verifique o resultado antes de repetir a criação.', 502);}
+  const diagnostic = path === '/preapproval' && method === 'POST';
+  let payload;
+  if (diagnostic) {
+    try { payload = await response.json(); } catch { payload = null; }
+    paymentDiagnostic(response, payload, { env, body });
+  }
   if (!response.ok) {
     const error = new InputError(response.status === 401 || response.status === 403 ? 'Credencial do Mercado Pago inválida ou sem permissão.' : response.status === 404 ? 'Plano não encontrado no Mercado Pago.' : 'Mercado Pago não confirmou a operação. Confira os dados do plano.', 502);
     error.definiteRejection = response.status >= 400 && response.status < 500;
     throw error;
   }
-  try {return await response.json();} catch {throw new InputError('Resposta inválida do Mercado Pago.', 502);}
+  try {if (diagnostic) {if (payload === null) throw Error(); return payload;} return await response.json();} catch {throw new InputError('Resposta inválida do Mercado Pago.', 502);}
 }
 
 export function checkoutUrl(remote) {

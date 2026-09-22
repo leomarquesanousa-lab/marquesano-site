@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { testStore } from './postgres-test-store.mjs';
 import { cardCheckout, attemptKey } from '../server/admin/card-checkout.mjs';
 
-const env = { ADMIN_SITE_ORIGIN: 'https://marquesano.com.br', MERCADOPAGO_ACCESS_TOKEN: 'mock-access', MERCADOPAGO_PUBLIC_KEY: 'mock-public' };
+const env = { MERCADOPAGO_SITE_ORIGIN: 'https://marquesano.com.br', ADMIN_SITE_ORIGIN: 'https://marquesano.com.br', MERCADOPAGO_ACCESS_TOKEN: 'mock-access', MERCADOPAGO_PUBLIC_KEY: 'mock-public' };
 const request = (body, origin = env.ADMIN_SITE_ORIGIN) => new Request(origin + '/api/checkout/basico', { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 async function fixture(t) {
   const { store, db } = await testStore();
@@ -33,6 +33,16 @@ async function fixture(t) {
   const body = (index = 0) => ({ revision: rows[index].revision, payer_email: 'buyer@example.test', card_token_id: 'official_card_token_test', terms: true, request_id: randomBytes(32).toString('hex') });
   return { repository, db, rows, calls, resources, options, body };
 }
+
+test('local HTTP checkout reaches POST preapproval with independent HTTPS public callback', async t => {
+  const f = await fixture(t);
+  const options = { ...f.options, env: { ...env, NODE_ENV: 'development', ADMIN_SITE_ORIGIN: 'http://localhost:3000' } };
+  const result = await cardCheckout(request(f.body(), 'http://localhost:3000'), 'basico', f.repository, options);
+  assert.equal(result.url, '/checkout/sucesso');
+  const post = f.calls.find(call => call.method === 'POST');
+  assert.equal(post.url, 'https://api.mercadopago.com/preapproval');
+  assert.equal(JSON.parse(post.body).back_url, 'https://marquesano.com.br/checkout/sucesso');
+});
 
 test('Básico, Professional and Business authorize exactly their stored provider plans and persist subscriptions', async t => {
   const f = await fixture(t);

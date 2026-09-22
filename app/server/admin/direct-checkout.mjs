@@ -1,11 +1,11 @@
 import { checkoutPlans } from '../../config/checkout-plans.mjs';
 import { startCheckout } from './mercadopago.mjs';
 import { InputError, isInputError, readJson } from './validation.mjs';
-import { validAdminRequestOrigin } from './origin.mjs';
+import { validPaymentOrigin } from './payment-origin.mjs';
 
 export async function directCheckout(request, code, plans, options = {}) {
   const env = options.env || process.env;
-  if (!validAdminRequestOrigin(request, env)) throw new InputError('Origem inválida.', 403);
+  if (!validPaymentOrigin(request, env)) throw new InputError('Origem inválida.', 403);
   if (!Object.hasOwn(checkoutPlans, code)) throw new InputError('Plano não encontrado.', 404);
   const data = await readJson(request, 512);
   if (Object.keys(data).some((key) => key !== 'revision') || !Number.isSafeInteger(data.revision)) {

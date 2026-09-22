@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import '../server/admin/core.mjs';
 import { directCheckout } from '../server/admin/direct-checkout.mjs';
 
-const env = { ADMIN_SITE_ORIGIN: 'https://marquesano.com.br', MERCADOPAGO_ACCESS_TOKEN: 'mock-token' };
+const env = { MERCADOPAGO_SITE_ORIGIN: 'https://marquesano.com.br', ADMIN_SITE_ORIGIN: 'https://marquesano.com.br', MERCADOPAGO_ACCESS_TOKEN: 'mock-token' };
 const request = (body, origin = env.ADMIN_SITE_ORIGIN) => new Request(origin + '/api/checkout/basico', {
   method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify(body)
 });

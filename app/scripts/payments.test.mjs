@@ -6,7 +6,7 @@ import { cookieName } from '../server/admin/core.mjs';
 import { syncPlan, startCheckout, checkoutUrl } from '../server/admin/mercadopago.mjs';
 import { handleAdminApi } from '../server/admin/api.mjs';
 
-const env = { NODE_ENV: 'production', ADMIN_SITE_ORIGIN: 'https://marquesano.com.br', DATABASE_URL: 'postgresql://isolated/test', MERCADOPAGO_ACCESS_TOKEN: 'test-secret-not-real' };
+const env = { NODE_ENV: 'production', MERCADOPAGO_SITE_ORIGIN: 'https://marquesano.com.br', ADMIN_SITE_ORIGIN: 'https://marquesano.com.br', DATABASE_URL: 'postgresql://isolated/test', MERCADOPAGO_ACCESS_TOKEN: 'test-secret-not-real' };
 async function fixture(t) {
   const store = await createAdminStore(':memory:');t.after(async () => await store.close());
   const plans = store.repository.plans,calls = [],remote = new Map();

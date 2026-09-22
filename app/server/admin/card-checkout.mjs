@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { checkoutPlans } from '../../config/checkout-plans.mjs';
 import { checkRemote, mpRequest } from './mercadopago.mjs';
 import { InputError, email, readJson } from './validation.mjs';
-import { validAdminRequestOrigin } from './origin.mjs';
+import { validPaymentOrigin, paymentSiteOrigin } from './payment-origin.mjs';
 
 export const receiptCookie = 'marquesano_checkout_receipt';
 export const attemptKey = value => createHash('sha256').update(value).digest('hex');
@@ -14,7 +14,7 @@ export function availableForCard(plan) {
 
 export async function cardCheckout(request, code, repository, options = {}) {
   const env = options.env || process.env;
-  if (!validAdminRequestOrigin(request, env)) throw new InputError('Origem inválida.', 403);
+  if (!validPaymentOrigin(request, env)) throw new InputError('Origem inválida.', 403);
   if (!Object.hasOwn(checkoutPlans, code)) throw new InputError('Plano não encontrado.', 404);
   const data = await readJson(request, 2048);
   const allowed = ['payer_email', 'card_token_id', 'revision', 'request_id', 'terms'];
@@ -74,7 +74,7 @@ export async function cardCheckout(request, code, repository, options = {}) {
     remote = await mpRequest('/preapproval', { ...options, method: 'POST', body: {
       preapproval_plan_id: plan.mercadopago_plan_id, payer_email: payer, card_token_id: data.card_token_id,
       external_reference: key, status: 'authorized', reason: 'Marquesano — ' + checkoutPlans[code].name,
-      back_url: env.ADMIN_SITE_ORIGIN + '/checkout/sucesso',
+      back_url: paymentSiteOrigin(env) + '/checkout/sucesso',
     } });
   } catch (error) {
     // Only explicit provider rejection permits a new creation attempt.
