@@ -142,11 +142,11 @@ test('concurrent submissions reserve only one creation, and remote price drift p
   assert.equal(f.calls.filter(c => c.method === 'POST').length, 1);
 });
 
-test('local same-origin submit reaches catalog validation; production still rejects localhost origin', async t => {
+test('explicit local development origin reaches catalog validation; production rejects localhost', async t => {
   const f = await fixture(t);
   await f.repository.plans.save('basico', { ...(await f.repository.plans.get('basico')), active: false });
   const local = () => request(f.body(), 'http://localhost:3000');
-  await assert.rejects(cardCheckout(local(), 'basico', f.repository, { ...f.options, env: { ...env, NODE_ENV: 'development' } }), e => e.status === 409 && e.message.includes('temporariamente indisponível'));
+  await assert.rejects(cardCheckout(local(), 'basico', f.repository, { ...f.options, env: { ...env, NODE_ENV: 'development', ADMIN_SITE_ORIGIN: 'http://localhost:3000' } }), e => e.status === 409 && e.message.includes('temporariamente indisponível'));
   await assert.rejects(cardCheckout(local(), 'basico', f.repository, { ...f.options, env: { ...env, NODE_ENV: 'production' } }), e => e.status === 403);
   assert.equal(f.calls.length, 0);
 });

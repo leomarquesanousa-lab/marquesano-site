@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { checkoutPlans } from '../../config/checkout-plans.mjs';
 import { checkRemote, mpRequest } from './mercadopago.mjs';
 import { InputError, email, readJson } from './validation.mjs';
+import { validAdminRequestOrigin } from './origin.mjs';
 
 export const receiptCookie = 'marquesano_checkout_receipt';
 export const attemptKey = value => createHash('sha256').update(value).digest('hex');
@@ -13,10 +14,7 @@ export function availableForCard(plan) {
 
 export async function cardCheckout(request, code, repository, options = {}) {
   const env = options.env || process.env;
-  const origin = request.headers.get('origin');
-  const requestUrl = new URL(request.url);
-  const localSameOrigin = env.NODE_ENV === 'development' && ['localhost', '127.0.0.1', '[::1]'].includes(requestUrl.hostname) && origin === requestUrl.origin;
-  if (origin !== env.ADMIN_SITE_ORIGIN && !localSameOrigin) throw new InputError('Origem inválida.', 403);
+  if (!validAdminRequestOrigin(request, env)) throw new InputError('Origem inválida.', 403);
   if (!Object.hasOwn(checkoutPlans, code)) throw new InputError('Plano não encontrado.', 404);
   const data = await readJson(request, 2048);
   const allowed = ['payer_email', 'card_token_id', 'revision', 'request_id', 'terms'];
