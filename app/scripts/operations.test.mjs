@@ -18,7 +18,7 @@ async function setup() {const store = await createAdminStore(':memory:');await s
 test('migration preserves records and is idempotent', async () => {
   const { db } = await testStore();try {
     await db.exec("INSERT INTO users(id,email,password_hash,role,active) VALUES('old-owner','owner@example.com','existing-hash','OWNER',1);INSERT INTO sessions VALUES('old-session','old-owner',9999999999999)");
-    await migrate(db);await migrate(db);assert.equal((await db.prepare('SELECT count(*) AS n FROM schema_migrations').get()).n, 8);assert.equal((await db.prepare('SELECT password_hash FROM users').get()).password_hash, 'existing-hash');assert.equal((await db.prepare('SELECT user_id FROM sessions').get()).user_id, 'old-owner');
+    await migrate(db);await migrate(db);assert.equal((await db.prepare('SELECT count(*) AS n FROM schema_migrations').get()).n, 9);assert.equal((await db.prepare('SELECT password_hash FROM users').get()).password_hash, 'existing-hash');assert.equal((await db.prepare('SELECT user_id FROM sessions').get()).user_id, 'old-owner');
     await db.prepare("UPDATE subscription_plans SET monthly_price_cents=12345 WHERE id='basico'").run();await migrate(db);assert.equal((await db.prepare("SELECT monthly_price_cents FROM subscription_plans WHERE id='basico'").get()).monthly_price_cents, 12345);assert.equal((await db.prepare('SELECT count(*) AS n FROM subscription_plans').get()).n, 3);
   } finally {await db.close();}
 });

@@ -1,3 +1,4 @@
+import { metaAdsOperations } from './meta-ads-api.mjs';
 import { adminStore, configured, cookieName, cookieOptions, canAccess, adminDiagnostic } from './core.mjs';
 import { NextResponse } from 'next/server.js';
 import { operations } from './operations.mjs';
@@ -51,6 +52,7 @@ export async function handleAdminApi(request, path, dependencies = {}) {
       return response;
     }
     if (action === 'session' && request.method === 'GET') return json({ user });
+    if (path[0] === 'meta-ads') return json(await metaAdsOperations(request,path.slice(1),user,store.repository,{env,fetcher:dependencies.fetcher||fetch}));
     if (path[0] === 'vendas') return json(await salesOperations(request,path.slice(1),user,store.repository,{env,fetcher:dependencies.fetcher||fetch}));
     if (path[0] === 'configuracoes' && path[1] === 'pagamentos') return json(await paymentOperations(request, path.slice(2), user, store.repository, { env, fetcher: dependencies.fetcher || fetch }));
     return json(await operations(request, path, user, store.repository, { env }));

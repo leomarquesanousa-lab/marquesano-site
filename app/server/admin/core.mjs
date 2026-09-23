@@ -14,6 +14,7 @@ async function diagnosticStage(stage, operation) {
 }
 export const roles = ['OWNER', 'ADMIN', 'MARKETING', 'SALES', 'VIEWER'];
 export const modules = {
+  'meta-ads': { title: 'Meta Ads', description: 'Campanhas, criativos e resultados da Meta.', roles: ['OWNER','ADMIN'] },
   vendas: { title: 'Vendas', description: 'Assinaturas, recebimentos e próximos vencimentos.', roles: ['OWNER','ADMIN'] },
   dashboard: { title: 'Dashboard', description: 'Visão geral do ambiente administrativo.', roles },
   marketing: { title: 'Marketing', description: 'Origens, campanhas e conversões registradas.', roles: ['OWNER', 'ADMIN', 'MARKETING'] },

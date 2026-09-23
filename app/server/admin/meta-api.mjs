@@ -2,6 +2,8 @@ import { randomBytes } from 'node:crypto';
 import { NextResponse } from 'next/server.js';
 import { cookieName } from './core.mjs';
 import { readJson, range } from './validation.mjs';
+import { metaVersion } from './meta.mjs';
+import { validAdminRequestOrigin } from './origin.mjs';
 import { META_VERSION, META_SCOPES, MetaError, safeMetaError, metaConfig, metaStatus, exchangeMetaCode, createMetaClient, metaIdentity, metaAccounts, encryptToken, metaAccess, metaCampaigns } from './meta.mjs';
 
 const headers = { 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer', 'X-Robots-Tag': 'noindex, nofollow', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY' };
@@ -42,15 +44,17 @@ export async function handleMetaApi(request, path, store, env = process.env, { f
   const sessionToken = request.cookies.get(cookieName(env))?.value,user = await store.getSession(sessionToken);
   if (!user) return json({ error: 'Autenticação necessária.' }, 401);
   if (!['OWNER', 'ADMIN'].includes(user.role)) return json({ error: 'Acesso não permitido.' }, 403);
-  if (!['GET', 'HEAD'].includes(request.method) && request.headers.get('origin') !== env.ADMIN_SITE_ORIGIN) return json({ error: 'Origem inválida.' }, 403);
+  if (!['GET', 'HEAD'].includes(request.method) && !validAdminRequestOrigin(request, env)) return json({ error: 'Origem inválida.' }, 403);
   let revision;
   try {
     if (action === 'connect' && request.method === 'GET') {
       if (request.headers.get('sec-fetch-site') === 'cross-site') return json({ error: 'Inicie a conexão pelo painel administrativo.' }, 403);
       const config = metaConfig(env),state = randomBytes(32).toString('hex'),browser = randomBytes(32).toString('hex');
       await meta.begin(state, browser, sessionToken);
-      const url = new URL(`https://www.facebook.com/${META_VERSION}/dialog/oauth`);
-      for (const [key, value] of Object.entries({ client_id: config.appId, redirect_uri: config.redirect, response_type: 'code', scope: META_SCOPES.join(','), state, auth_type: 'rerequest' })) url.searchParams.set(key, value);
+      const url = new URL(`https://www.facebook.com/${metaVersion(env)}/dialog/oauth`);
+      const manage = new URL(request.url).searchParams.get('manage') === '1';
+      const scopes = manage ? [...META_SCOPES, 'ads_management', 'pages_show_list', 'pages_read_engagement', 'pages_manage_ads'] : META_SCOPES;
+      for (const [key, value] of Object.entries({ client_id: config.appId, redirect_uri: config.redirect, response_type: 'code', scope: scopes.join(','), state, auth_type: 'rerequest' })) url.searchParams.set(key, value);
       const response = NextResponse.redirect(url, { status: 303, headers });response.cookies.set(metaCookieName(env), browser, cookieOptions(env));return response;
     }
     if (action === 'status' && request.method === 'GET') return json(await metaStatus(env, meta));

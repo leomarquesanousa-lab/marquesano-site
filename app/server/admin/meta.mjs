@@ -2,6 +2,11 @@ import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes } f
 
 export const META_VERSION = 'v26.0';
 export const META_SCOPES = ['ads_read'];
+export function metaVersion(env = process.env) {
+  const version = env.META_GRAPH_API_VERSION || META_VERSION;
+  if (!/^v\d{2}\.0$/.test(version)) throw new MetaError('CONFIG_INVALID');
+  return version;
+}
 export const metaMessages = {
   APP_ID_MISSING: 'App ID ausente. Configure META_APP_ID no servidor.',
   APP_SECRET_MISSING: 'App Secret ausente. Configure META_APP_SECRET no servidor.',
@@ -65,16 +70,23 @@ export async function metaStatus(env = process.env, store) {
 }
 async function responseJson(response) {
   const data = await response.json().catch(() => null);
-  if (!response.ok || !data || data.error) {const code = Number(data?.error?.code),kind = code === 190 || response.status === 401 ? 'TOKEN_INVALID' : [10, 200, 294].includes(code) || response.status === 403 ? 'MARKETING_PERMISSION' : [4, 17, 32, 613, 80004].includes(code) || response.status === 429 ? 'RATE_LIMIT' : 'PROVIDER_ERROR';throw new MetaError(kind, kind === 'TOKEN_INVALID' ? 409 : kind === 'MARKETING_PERMISSION' ? 403 : kind === 'RATE_LIMIT' ? 429 : 502);}
+  if (data?.error) console.error('META_API_ERROR', { http_status:response.status, code:Number.isInteger(data.error.code)?data.error.code:null, subcode:Number.isInteger(data.error.error_subcode)?data.error.error_subcode:null, request_id:/^[\w-]{1,120}$/.test(data.error.fbtrace_id||'')?data.error.fbtrace_id:null });
+  if (!response.ok || !data || data.error) {const code = Number(data?.error?.code),kind = code === 190 || response.status === 401 ? 'TOKEN_INVALID' : [10, 200, 294].includes(code) || response.status === 403 ? 'MARKETING_PERMISSION' : [4, 17, 32, 613, 80004].includes(code) || response.status === 429 ? 'RATE_LIMIT' : 'PROVIDER_ERROR';const error = new MetaError(kind, kind === 'TOKEN_INVALID' ? 409 : kind === 'MARKETING_PERMISSION' ? 403 : kind === 'RATE_LIMIT' ? 429 : 502); error.requestId = /^[\w-]{1,120}$/.test(data?.error?.fbtrace_id || '') ? data.error.fbtrace_id : null; throw error;}
   return data;
 }
 export function createMetaClient(token, env = process.env, fetcher = fetch) {
   const config = metaConfig(env),proof = createHmac('sha256', config.secret).update(token).digest('hex');
+  const scrub = value => {
+    if(typeof value==='string')return value.split(token).join('[redacted]').split(config.secret).join('[redacted]').split(proof).join('[redacted]');
+    if(Array.isArray(value))return value.map(scrub);
+    if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).filter(([key])=>!['access_token','appsecret_proof','client_secret'].includes(key)).map(([key,v])=>[key,scrub(v)]));
+    return value;
+  };
   async function get(path, params = {}) {
-    if (!/^(me(?:\/(?:permissions|adaccounts))?|act_\d+(?:\/(?:campaigns|insights))?)$/.test(path)) throw new MetaError('ACCOUNT_INVALID');
-    const url = new URL(`https://graph.facebook.com/${META_VERSION}/${path}`);
+    if (!/^(search|me(?:\/(?:permissions|adaccounts|accounts))?|(?:act_)?\d+(?:\/(?:campaigns|adsets|ads|adcreatives|adimages|insights|adspixels|customconversions|stats|previews|leadgen_forms|saved_audiences))?)$/.test(path)) throw new MetaError('ACCOUNT_INVALID');
+    const url = new URL(`https://graph.facebook.com/${metaVersion(env)}/${path}`);
     for (const [k, v] of Object.entries({ ...params, appsecret_proof: proof })) url.searchParams.set(k, String(v));
-    try {return await responseJson(await fetcher(url.href, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(15000) }));}
+    try {return scrub(await responseJson(await fetcher(url.href, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(15000) })));}
     catch (e) {throw safeMetaError(e);}
   }
   async function list(path, params = {}) {
@@ -90,12 +102,24 @@ export function createMetaClient(token, env = process.env, fetcher = fetch) {
     }
     return { rows, truncated: true };
   }
-  return { get, list };
+  async function post(path, body) {
+    if (!/^(?:act_)?\d+(?:\/(?:campaigns|adsets|ads|adcreatives|adimages|copies))?$/.test(path)) throw new MetaError('ACCOUNT_INVALID');
+    const data = new URLSearchParams({ appsecret_proof: proof });
+    for (const [key, value] of Object.entries(body)) data.set(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
+    try {
+      const response = await fetcher(`https://graph.facebook.com/${metaVersion(env)}/${path}`, { method:'POST', headers:{Authorization:`Bearer ${token}`}, body:data, redirect:'error', signal:AbortSignal.timeout(30000) });
+      const requestId = response.headers.get('x-fb-trace-id');
+      console.info('META_ADS_WRITE', { http_status:response.status, request_id:/^[\w-]{1,120}$/.test(requestId||'')?requestId:null });
+      const result = await responseJson(response);
+      return { ...scrub(result), request_id:/^[\w-]{1,120}$/.test(requestId||'')?requestId:null };
+    } catch (error) { throw safeMetaError(error); }
+  }
+  return { get, list, post };
 }
 export async function exchangeMetaCode(code, env = process.env, fetcher = fetch) {
   const config = metaConfig(env);
   async function exchange(params) {
-    try {const data = await responseJson(await fetcher(`https://graph.facebook.com/${META_VERSION}/oauth/access_token`, { method: 'POST', body: new URLSearchParams({ client_id: config.appId, client_secret: config.secret, ...params }), cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(15000) }));
+    try {const data = await responseJson(await fetcher(`https://graph.facebook.com/${metaVersion(env)}/oauth/access_token`, { method: 'POST', body: new URLSearchParams({ client_id: config.appId, client_secret: config.secret, ...params }), cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(15000) }));
       if (typeof data.access_token !== 'string' || !data.access_token || !Number.isFinite(Number(data.expires_in)) || Number(data.expires_in) <= 0) throw new MetaError('TOKEN_INVALID');return data;
     } catch (e) {throw safeMetaError(e);}
   }

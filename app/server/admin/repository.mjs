@@ -1,3 +1,4 @@
+import { createMetaAdsStore } from './meta-ads-store.mjs';
 import { randomUUID, createHash } from 'node:crypto';
 import { InputError, text, choice, email, phone, website, publicPath, leadStatuses, clientStatuses, campaignStatuses } from './validation.mjs';
 import { createMetaStore } from './meta-store.mjs';
@@ -98,7 +99,7 @@ export function createRepository(db, now = Date.now) {
     });
   }
   return {
-    list, detail, save, users, meta: createMetaStore(db, now), plans: createPlanStore(db, now), billing: createBillingStore(db, now), checkout: createCheckoutStore(db), sales: createSalesStore(db, now),
+    list, detail, save, users, metaAds: createMetaAdsStore(db, now), meta: createMetaStore(db, now), plans: createPlanStore(db, now), billing: createBillingStore(db, now), checkout: createCheckoutStore(db), sales: createSalesStore(db, now),
     async note(id, body, actor) {return await tx(async () => {await requireRow('leads', id);const noteId = randomUUID();await run('INSERT INTO lead_notes VALUES (?,?,?,?,?)', noteId, id, actor.id, text(body, 4000, true), time());await audit(actor, 'note', 'leads', id);return { id: noteId };});},
     async convert(id, actor) {return await tx(async () => {const lead = await requireRow('leads', id);if (lead.status !== 'WON') throw new InputError('Somente leads ganhos podem virar clientes.');const existing = await one('SELECT id FROM clients WHERE lead_id=?', id);if (existing) return existing;const clientId = randomUUID();await run('INSERT INTO clients (id,lead_id,company_id,name,email,phone,whatsapp,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)', clientId, id, lead.company_id, lead.name, lead.email, lead.phone, lead.whatsapp, 'ACTIVE', time(), time());await audit(actor, 'convert', 'leads', id);return { id: clientId };});},
     async settings(env = process.env) {const saved = Object.fromEntries((await all('SELECT key,value FROM settings')).map((r) => [r.key, r.value]));return Object.fromEntries(settingsKeys.map((key) => [key, saved[key] ?? env[key] ?? (key === 'TRACKING_ENABLED' ? 'false' : '')]));},

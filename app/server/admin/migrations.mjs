@@ -1,3 +1,4 @@
+import { migrateMetaAds } from './meta-ads-store.mjs';
 import { migratePlans, ensurePlans } from './plan-store.mjs';
 import { migrateBilling } from './billing-store.mjs';
 import { migrateSales } from './sales-migration.mjs';
@@ -73,6 +74,10 @@ export async function migrate(db) {
         ALTER TABLE users ADD COLUMN deleted_at TEXT;
         CREATE UNIQUE INDEX users_email_case_insensitive ON users(lower(email));`);
       await db.prepare('INSERT INTO schema_migrations VALUES(8,?)').run(new Date().toISOString());
+    }
+    if (!(await db.prepare('SELECT version FROM schema_migrations WHERE version=9').get())) {
+      await migrateMetaAds(db);
+      await db.prepare('INSERT INTO schema_migrations VALUES(9,?)').run(new Date().toISOString());
     }
   });
 }
