@@ -44,7 +44,7 @@ test('real HTTP POSTs use production origin rules in both checkout route handler
       ]) {
         const response = await fetch(`http://127.0.0.1:${server.address().port}${path}`, {
           method: 'POST', headers: { origin, 'content-type': 'application/json',
-            'x-forwarded-host': 'marquesano.com.br', 'x-forwarded-proto': 'https' }, body: '{}'
+            'x-forwarded-host': 'hostinger-internal, proxy.internal', 'x-forwarded-proto': 'http, https' }, body: '{}'
         });
         const data = await response.json();
         assert.equal(response.status, allowed ? (path.includes('/checkout/') ? 400 : 200) : 403);

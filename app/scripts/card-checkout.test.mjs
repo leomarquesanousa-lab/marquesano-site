@@ -89,6 +89,16 @@ test('browser cannot manipulate price, frequency, provider plan, stale revision 
   assert.equal(f.calls.length, 0);
 });
 
+test('CC_VAL_433 returns only the requested friendly message and records rejection', async t => {
+  const f = await fixture(t), data = f.body();
+  const fetcher = async (url, init) => init.method === 'POST'
+    ? Response.json({ code: 'rejected', message: 'CC_VAL_433 Credit card validation has failed' }, { status: 400 })
+    : f.options.fetcher(url, init);
+  await assert.rejects(cardCheckout(request(data), 'basico', f.repository, { ...f.options, fetcher }), e =>
+    e.status === 422 && e.message === 'O Mercado Pago não conseguiu validar este cartão. Confira os dados informados ou tente outro cartão.');
+  assert.equal((await f.repository.checkout.get(attemptKey(data.request_id))).state, 'rejected');
+});
+
 test('provider rejection is sanitized and allows retry with a new token/attempt', async t => {
   const f = await fixture(t), data = f.body();
   const fetcher = async (url, init) => init.method === 'POST' ? { ok: false, status: 400, json: async () => ({ message: 'secret' }) } : f.options.fetcher(url, init);

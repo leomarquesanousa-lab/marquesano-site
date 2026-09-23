@@ -22,6 +22,9 @@ export async function mpRequest(path, { env = process.env, fetcher = fetch, meth
   if (!response.ok) {
     const error = new InputError(response.status === 401 || response.status === 403 ? 'Credencial do Mercado Pago inválida ou sem permissão.' : response.status === 404 ? 'Plano não encontrado no Mercado Pago.' : 'Mercado Pago não confirmou a operação. Confira os dados do plano.', 502);
     error.definiteRejection = response.status >= 400 && response.status < 500;
+    error.cardValidationFailed = diagnostic && [payload?.code, payload?.message, payload?.status_detail,
+      ...(Array.isArray(payload?.cause) ? payload.cause.flatMap(c => [c?.code, c?.description, c?.message]) : [])]
+      .some(value => typeof value === 'string' && /\bCC_VAL_433\b/.test(value));
     throw error;
   }
   try {if (diagnostic) {if (payload === null) throw Error(); return payload;} return await response.json();} catch {throw new InputError('Resposta inválida do Mercado Pago.', 502);}

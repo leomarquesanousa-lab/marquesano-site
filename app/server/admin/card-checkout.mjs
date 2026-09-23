@@ -79,6 +79,7 @@ export async function cardCheckout(request, code, repository, options = {}) {
   } catch (error) {
     // Only explicit provider rejection permits a new creation attempt.
     await checkout.state(key, error.definiteRejection ? 'rejected' : 'unknown');
+    if (error.definiteRejection && error.cardValidationFailed) throw new InputError('O Mercado Pago não conseguiu validar este cartão. Confira os dados informados ou tente outro cartão.', 422);
     if (error.definiteRejection) throw new InputError('Mercado Pago não autorizou a assinatura. Confira os dados do cartão ou use outro cartão. Se persistir, fale com o suporte.', 422);
     throw uncertain();
   }

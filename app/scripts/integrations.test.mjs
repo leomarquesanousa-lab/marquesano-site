@@ -9,6 +9,21 @@ import { range } from '../server/admin/validation.mjs';
 
 const period = range(new URLSearchParams('days=7'));
 const settings = { GA4_PROPERTY_ID: '123', GSC_SITE_URL: 'sc-domain:marquesano.com.br' };
+test('GOOGLE_SERVICE_ACCOUNT_EMAIL alias authenticates GA4 and preserves connected report shape', async () => {
+  const legacy = credential();
+  const env = { GOOGLE_SERVICE_ACCOUNT_EMAIL: legacy.GOOGLE_CLIENT_EMAIL, GOOGLE_PRIVATE_KEY: legacy.GOOGLE_PRIVATE_KEY };
+  const result = await googleReport('ga4', settings, period, { env, fetcher: async (url, options) => {
+    if (url.includes('oauth2.googleapis.com')) {
+      const claims = JSON.parse(Buffer.from(options.body.get('assertion').split('.')[1], 'base64url'));
+      assert.equal(claims.iss, env.GOOGLE_SERVICE_ACCOUNT_EMAIL);
+      return Response.json({ access_token: 'mock-token' });
+    }
+    return Response.json({ rows: [{ metricValues: [{ value: '22' }, { value: '40' }, { value: '262' }] }], rowCount: 1 });
+  } });
+  assert.equal(result.status, 'Ativo');
+  assert.deepEqual(result.reports.summary.rows[0], ['22', '40', '262']);
+  assert.deepEqual(result.reports.summary.columns.slice(0, 3), ['activeUsers', 'sessions', 'screenPageViews']);
+});
 function credential() {return { GOOGLE_CLIENT_EMAIL: 'test@example.iam.gserviceaccount.com', GOOGLE_PRIVATE_KEY: generateKeyPairSync('rsa', { modulusLength: 2048, privateKeyEncoding: { type: 'pkcs8', format: 'pem' }, publicKeyEncoding: { type: 'spki', format: 'pem' } }).privateKey };}
 
 test('GSC distinguishes disabled API, permission, wrong property, missing property, scope and invalid token', async () => {

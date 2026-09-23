@@ -58,6 +58,9 @@ export async function metaStatus(env = process.env, store) {
   const row = await store?.get(),valid = Boolean(config && row?.token_ciphertext && row.app_id === config.appId && row.expires_at > store.now());
   let connected = valid;if (valid) {try {decryptToken(row.token_ciphertext, env);} catch {connected = false;}}
   const profile = connected ? parse(row.profile_json) : null,account = connected ? parse(row.account_json) : null;
+  console.info('META_CONNECTED=' + connected);
+  console.info('META_OAUTH_AVAILABLE=' + Boolean(config));
+  console.info('META_AD_ACCOUNT_SELECTED=' + Boolean(account));
   return { status: connected ? 'Conectado' : 'Não conectado', appId: /^\d+$/.test(env.META_APP_ID || '') ? env.META_APP_ID : '', appConfigured: Boolean(config), appSecretConfigured: Boolean(env.META_APP_SECRET), redirectConfigured: Boolean(config), oauthReady: Boolean(config), oauthStatus: connected ? 'Conectado' : 'Não conectado', accountConnected: connected, hasStoredConnection: Boolean(row?.token_ciphertext), profile, adAccountId: account?.id || '', adAccountSelected: Boolean(account), selectedAccount: account, expiresAt: connected ? new Date(row.expires_at).toISOString() : null, message: error?.message || (row?.token_ciphertext && !connected ? metaMessages.TOKEN_INVALID : null), capabilities: { accounts: connected, campaigns: connected && Boolean(account), insights: connected && Boolean(account), adSets: false, ads: false, budgets: false, delivery: false } };
 }
 async function responseJson(response) {

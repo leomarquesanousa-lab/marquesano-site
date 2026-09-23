@@ -23,14 +23,14 @@ for (const origin of ['https://external.example', 'http://marquesano.com.br', 'h
     assert.equal((await handleAdminApi(request(origin), ['login'], { env, store: {} })).status, 403);
   });
 }
-test('proxy headers cannot expand trusted hosts or downgrade HTTPS', () => {
+test('valid Origin takes precedence over reverse proxy headers', () => {
   const origin = 'https://marquesano.com.br';
   for (const headers of [
     { 'x-forwarded-host': 'external.example' },
     { 'x-forwarded-host': 'marquesano.com.br, external.example' },
     { 'x-forwarded-proto': 'http' },
     { 'x-forwarded-proto': 'https,http' }
-  ]) assert.equal(validAdminRequestOrigin(request(origin, headers), env), false);
+  ]) assert.equal(validAdminRequestOrigin(request(origin, headers), env), true);
   assert(validAdminRequestOrigin(request(origin, { 'x-forwarded-host': 'www.marquesano.com.br' }), env));
 });
 test('direct HTTPS host works, missing Origin fails, local dev stays explicit', () => {
@@ -41,4 +41,21 @@ test('direct HTTPS host works, missing Origin fails, local dev stays explicit', 
   const local = new NextRequest('http://localhost:3000/api/admin/login', { headers: { origin: 'http://localhost:3000' } });
   assert(validAdminRequestOrigin(local, { NODE_ENV: 'development', ADMIN_SITE_ORIGIN: 'http://localhost:3000/' }));
   assert.equal(validAdminRequestOrigin(local, env), false);
+});
+
+test('absent Origin uses first proxy values with independent CSRF evidence', () => {
+  const make = extra => new NextRequest('http://internal/api/checkout/basico', { headers: {
+    host: 'internal', 'x-forwarded-host': 'marquesano.com.br, internal',
+    'x-forwarded-proto': 'https, http', referer: 'https://marquesano.com.br/checkout/basico', ...extra
+  } });
+  assert(validAdminRequestOrigin(make({}), env));
+  assert(!validAdminRequestOrigin(make({ 'x-forwarded-host': 'evil.com, marquesano.com.br' }), env));
+  assert(!validAdminRequestOrigin(make({ 'x-forwarded-proto': 'http, https' }), env));
+  assert(!validAdminRequestOrigin(make({ referer: 'https://evil.com/' }), env));
+  assert(!validAdminRequestOrigin(make({ origin: 'https://evil.com' }), env));
+  assert(!validAdminRequestOrigin(make({ origin: '' }), env));
+  const req = make({}); req.headers.delete('referer');
+  assert(!validAdminRequestOrigin(req, env));
+  req.headers.set('sec-fetch-site', 'same-origin');
+  assert(validAdminRequestOrigin(req, env));
 });

@@ -10,7 +10,7 @@ export async function operations(request, path, user, repository, { env = proces
   if (request.method === 'GET' && ['dashboard', 'analytics'].includes(module)) console.info('ANALYTICS_RECEIVED', { module });
   if (!canAccess(user.role, module) || path.length > 3) throw new InputError('Acesso não permitido.', 403);
   const params = new URL(request.url).searchParams,period = range(params);
-  const settings = await repository.settings(),integrations = integrationStatus(settings);
+  const settings = await repository.settings(env),integrations = integrationStatus(settings,env);
   if (request.method === 'GET') {
     if (path.length > 2) throw new InputError('Rota inválida.', 404);
     if (module === 'configuracoes' && id === 'meta') return await metaStatus(env, repository.meta);
@@ -19,10 +19,10 @@ export async function operations(request, path, user, repository, { env = proces
     if (['dashboard', 'analytics'].includes(module)) {
       const trace = randomUUID();
       console.info('GA4_PROPERTY_ID_AVAILABLE=' + Boolean(settings.GA4_PROPERTY_ID));
-      console.info('GOOGLE_SERVICE_ACCOUNT_EMAIL_AVAILABLE=' + Boolean(process.env.GOOGLE_CLIENT_EMAIL));
-      console.info('GOOGLE_PRIVATE_KEY_AVAILABLE=' + Boolean(process.env.GOOGLE_PRIVATE_KEY));
+      console.info('GOOGLE_SERVICE_ACCOUNT_EMAIL_AVAILABLE=' + Boolean(env.GOOGLE_CLIENT_EMAIL || env.GOOGLE_SERVICE_ACCOUNT_EMAIL));
+      console.info('GOOGLE_PRIVATE_KEY_AVAILABLE=' + Boolean(env.GOOGLE_PRIVATE_KEY));
       try {
-        const result = { ...(await repository.report(period)), settings, integrations, ...(params.get('remote') === '1' ? { google: await googleReport('ga4', settings, period, { trace }) } : {}) };
+        const result = { ...(await repository.report(period)), settings, integrations, ...(params.get('remote') === '1' ? { google: await googleReport('ga4', settings, period, { trace, env }) } : {}) };
         const summary = result.google?.reports?.summary;
         if (summary) for (const [key, label] of [['activeUsers', 'ACTIVE_USERS'], ['sessions', 'SESSIONS'], ['screenPageViews', 'PAGE_VIEWS']]) {
           const value = Number(summary.rows[0]?.[summary.columns.indexOf(key)] || 0);
@@ -36,14 +36,17 @@ export async function operations(request, path, user, repository, { env = proces
       }
     }
     if (module === 'seo') return { ...seoDiagnostics(), integrations, ...(params.get('diagnose') === '1' ? { published: await publishedSeoStatus() } : {}), ...(params.get('remote') === '1' ? { google: await googleReport('gsc', settings, period) } : {}) };
-    if (module === 'configuracoes') return { settings, integrations, meta: await metaStatus(env, repository.meta) };
+    if (module === 'configuracoes') {
+      const [ga4, gsc] = await Promise.all(['ga4', 'gsc'].map(provider => testGoogleConnection(provider, settings, period, { env })));
+      return { settings, integrations: { ...integrations, ga4: { ...integrations.ga4, result: ga4 }, gsc: { ...integrations.gsc, result: gsc } }, meta: await metaStatus(env, repository.meta) };
+    }
     return await repository.list(module, params, period);
   }
   if (!['POST', 'PATCH'].includes(request.method)) throw new InputError('Método não permitido.', 405);
   if (user.role === 'VIEWER' || ['dashboard', 'analytics', 'marketing', 'seo', 'auditoria', 'formularios'].includes(module)) throw new InputError('Acesso de leitura.', 403);
   const data = await readJson(request);
   if (module === 'configuracoes' && id === 'meta' && action === 'connect' && request.method === 'POST') return { ok: true, authorizationUrl: '/api/admin/meta/connect' };
-  if (module === 'configuracoes' && ['ga4', 'gsc'].includes(id) && action === 'test' && request.method === 'POST') return testGoogleConnection(id, settings, period);
+  if (module === 'configuracoes' && ['ga4', 'gsc'].includes(id) && action === 'test' && request.method === 'POST') return testGoogleConnection(id, settings, period, { env });
   if (module === 'configuracoes' && !id && request.method === 'PATCH') return await repository.saveSettings(data, user);
   if (module === 'usuarios' && user.role === 'OWNER' && !action && (id && request.method === 'PATCH' || !id && request.method === 'POST')) return await repository.saveUser(data, user, id, hashPassword);
   if (module === 'leads' && id && request.method === 'POST') {

@@ -8,7 +8,7 @@ import PaymentSettings from './payment-settings.js';
 function IntegrationForm({ title, fields, settings, integration, provider, api, credentialsPresent }) {
   const [saved, setSaved]=useState(settings);
   const [values, setValues]=useState(settings);
-  const [result, setResult]=useState(null);
+  const [result, setResult]=useState(integration?.result || null);
   const [busy, setBusy]=useState('');
   const [message, setMessage]=useState('');
   const [error, setError]=useState('');
@@ -70,14 +70,14 @@ export default function SettingsIntegrations({ data, user, api }) {
     <IntegrationForm {...shared} title="Google Search Console" provider="gsc" integration={data.integrations.gsc} fields={[
       ['GSC_SITE_URL','GSC_SITE_URL','sc-domain:marquesano.com.br ou https://marquesano.com.br/']
     ]}/>
+    <MetaSettings meta={data.meta} api={api}/>
     <IntegrationForm {...shared} title="Google Tag Manager" fields={[
       ['GTM_CONTAINER_ID','GTM_CONTAINER_ID (opcional)','GTM-…']
     ]}/>
     <LocalCollection settings={data.settings} api={api}/>
-    <MetaSettings meta={data.meta} api={api}/>
     <section className={styles.panel}><h2>Credenciais do servidor</h2>
       <p>Service Account: {data.integrations.credentialsPresent ? 'configurada' : 'não configurada'}</p>
-      <p className={styles.help}>GOOGLE_CLIENT_EMAIL e GOOGLE_PRIVATE_KEY ficam somente no .env do servidor. A conta deve ter acesso às propriedades Google.</p>
+      <p className={styles.help}>GOOGLE_CLIENT_EMAIL (ou GOOGLE_SERVICE_ACCOUNT_EMAIL) e GOOGLE_PRIVATE_KEY ficam somente no .env do servidor. A conta deve ter acesso às propriedades Google.</p>
     </section>
     </div>
   </>;

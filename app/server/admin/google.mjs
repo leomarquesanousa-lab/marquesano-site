@@ -1,5 +1,6 @@
 import { createSign, createHash } from 'node:crypto';
 const tokenCache = new Map();
+const googleEnv = env => ({ ...env, GOOGLE_CLIENT_EMAIL: env.GOOGLE_CLIENT_EMAIL?.trim() || env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim() });
 export async function testGoogleConnection(provider, settings, period, options) {
   const result=await googleReport(provider,settings,period,options);
   const name=provider==='ga4'?'Google Analytics':'Search Console';
@@ -33,6 +34,7 @@ async function providerError(response,provider,auth=false) {
   return Object.assign(Error('Google request failed'),{auth:auth||[401,403].includes(response.status),httpStatus:response.status,code});
 }
 export function integrationStatus(settings, env=process.env) {
+  env=googleEnv(env);
   const credentials=Boolean(env.GOOGLE_CLIENT_EMAIL&&env.GOOGLE_PRIVATE_KEY);
   return {ga4:{status:settings.GA4_PROPERTY_ID&&credentials?'Configurado':'Não configurado',tracking:!!settings.GA4_MEASUREMENT_ID&&settings.TRACKING_ENABLED==='true'&&!settings.GTM_CONTAINER_ID},gsc:{status:settings.GSC_SITE_URL&&credentials?'Configurado':'Não configurado'},gtm:{status:settings.GTM_CONTAINER_ID?'Configurado':'Não conectado'},credentialsPresent:credentials};
 }
@@ -49,7 +51,10 @@ async function token(scope,env,fetcher) {
   if(tokenCache.size>10)tokenCache.clear();tokenCache.set(key,{value:data.access_token,until:Date.now()+Math.min(Number(data.expires_in)||3600,3600)*1000-60000});return data.access_token;
 }
 export async function googleReport(provider,settings,period,{env=process.env,fetcher=fetch,trace}={}) {
+  env=googleEnv(env);
+  const prefix=provider==='ga4'?'GA4':'SEARCH_CONSOLE';
   const initial=integrationStatus(settings,env)[provider];
+  if(initial?.status!=='Configurado') console.info(prefix+'_CONNECTED=false');
   if(provider==='ga4' && trace) {
     console.info('GA4_REQUEST_STARTED');
     if(initial?.status!=='Configurado') {
@@ -63,7 +68,7 @@ export async function googleReport(provider,settings,period,{env=process.env,fet
     const access=await token(scope,env,fetcher);
     async function post(url,body) {
       const response=await fetcher(url,{method:'POST',headers:{Authorization:`Bearer ${access}`,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});
-      if(provider==='ga4' && trace) console.info('GA4_HTTP_STATUS=' + response.status);
+      console.info(prefix+'_HTTP_STATUS=' + response.status);
       if(!response.ok) {
         const error=await providerError(response,provider);
         if(provider==='gsc'&&error.code==='ACCESS_DENIED') {
@@ -91,14 +96,18 @@ export async function googleReport(provider,settings,period,{env=process.env,fet
         const data=await post(`https://analyticsdata.googleapis.com/v1beta/properties/${settings.GA4_PROPERTY_ID}:runReport`,{dateRanges:[{startDate:period.start,endDate:period.end}],dimensions:dimensions.map(name=>({name})),metrics:metrics.map(name=>({name})),limit:name==='timeline'?367:100,...(name==='timeline'?{orderBys:[{dimension:{dimensionName:'date'}}]}:name!=='summary'?{orderBys:[{metric:{metricName:name==='pages'?'screenPageViews':name==='events'?'eventCount':'activeUsers'},desc:true}]}:{})});
         return [name,{columns:[...dimensions,...metrics],rows:(data.rows||[]).map(row=>[...(row.dimensionValues||[]),...(row.metricValues||[])].map(v=>v.value)),rowCount:data.rowCount||0,timeZone:data.metadata?.timeZone}];
       })));
+      console.info('GA4_CONNECTED=true');
       return {status:'Ativo',reports,updatedAt:new Date().toISOString()};
     }
     const reports=Object.fromEntries(await Promise.all(Object.entries({summary:[],queries:['query'],pages:['page'],countries:['country'],devices:['device']}).map(async([name,dimensions])=>{
       const data=await post(`https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(settings.GSC_SITE_URL)}/searchAnalytics/query`,{startDate:period.start,endDate:period.end,dimensions,rowLimit:100});
       return [name,{columns:[...dimensions,'cliques','impressões','CTR','posição'],rows:(data.rows||[]).map(row=>[...(row.keys||[]),row.clicks,row.impressions,row.ctr,row.position])}];
     })));
+    console.info('SEARCH_CONSOLE_CONNECTED=true');
     return {status:'Ativo',reports};
   } catch(error) {
+    console.info(prefix+'_CONNECTED=false');
+    if(error.httpStatus) console.info(prefix+'_HTTP_STATUS='+error.httpStatus);
     const messages={400:'O Google recusou a consulta. Confira o identificador da propriedade e o período.',401:'O Google recusou a autenticação. Confira a Service Account no servidor.',403:'Acesso negado pelo Google. Confira as permissões da Service Account e se a API está habilitada.',404:'Propriedade não encontrada no Google. Confira o identificador salvo.',429:'Limite de consultas do Google atingido. Aguarde e tente novamente.'};
     const message=diagnostics[error.code] || messages[error.httpStatus] || (error.auth?'Confira as credenciais no servidor e o acesso da conta de serviço à propriedade.':['TimeoutError','AbortError'].includes(error.name)?'O Google demorou para responder. Tente novamente.':'Não foi possível consultar a API oficial. Tente novamente.');
     if(provider==='ga4' && trace) {
