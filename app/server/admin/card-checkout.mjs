@@ -36,9 +36,14 @@ export async function cardCheckout(request, code, repository, options = {}) {
     await checkout.complete(key, remote.id, () => billing.apply({
       event: { key: 'checkout:' + key, topic: 'subscription_preapproval', id: remote.id },
       subscription: { id: remote.id, plan_id: plan.id, status: remote.status,
-        next_payment_date: remote.next_payment_date || null, payer_email: payer,
+        next_payment_date: remote.next_payment_date ? new Date(remote.next_payment_date).toISOString() : null, payer_email: payer,
+        created_at:remote.date_created ? new Date(remote.date_created).toISOString() : previous?.created_at ? new Date(previous.created_at).toISOString() : null, external_reference:key,
+        amount_cents:previous?.amount_cents ?? plan.monthly_price_cents,currency:'BRL',
+        cycles:previous ? (previous.terms_version==='2026-09-checkout-12-months'?12:null) : plan.cycles,
+        end_date:remote.auto_recurring?.end_date ? new Date(remote.auto_recurring.end_date).toISOString() : null,
         updated_at: Date.parse(remote.last_modified || remote.date_created) || Date.now() },
     }));
+    await billing.notifications?.dispatch({env,fetcher:options.fetcher||fetch,limit:1,subscriptionId:remote.id}).catch(()=>console.error('SALES_EMAIL_DISPATCH_FAILED'));
     return { receipt: data.request_id, url: '/checkout/sucesso' };
   }
 

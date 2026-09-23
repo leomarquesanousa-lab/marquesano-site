@@ -1,4 +1,4 @@
-import { canAccess, hashPassword } from './core.mjs';
+import { canAccess } from './core.mjs';
 import { InputError, readJson, range, text } from './validation.mjs';
 import { googleReport, integrationStatus, testGoogleConnection } from './google.mjs';
 import { seoDiagnostics, publishedSeoStatus } from '../seo.mjs';
@@ -9,6 +9,18 @@ export async function operations(request, path, user, repository, { env = proces
   const [module, id, action] = path;
   if (request.method === 'GET' && ['dashboard', 'analytics'].includes(module)) console.info('ANALYTICS_RECEIVED', { module });
   if (!canAccess(user.role, module) || path.length > 3) throw new InputError('Acesso não permitido.', 403);
+  if(module==='usuarios') {
+    if(request.method==='GET'&&!id)return repository.users.list(new URL(request.url).searchParams,user);
+    if(!['POST','PATCH'].includes(request.method))throw new InputError('Método não permitido.',405);
+    const data=await readJson(request,4096);
+    if(!action&&((!id&&request.method==='POST')||(id&&request.method==='PATCH')))return repository.users.save(data,user,id);
+    if(id&&request.method==='POST') {
+      if(action==='password')return repository.users.password(id,data,user);
+      if(action==='status')return repository.users.status(id,data,user);
+      if(action==='delete'&&Object.keys(data).length===0)return repository.users.remove(id,user);
+    }
+    throw new InputError('Rota ou método inválido.',405);
+  }
   const params = new URL(request.url).searchParams,period = range(params);
   const settings = await repository.settings(env),integrations = integrationStatus(settings,env);
   if (request.method === 'GET') {
@@ -48,7 +60,6 @@ export async function operations(request, path, user, repository, { env = proces
   if (module === 'configuracoes' && id === 'meta' && action === 'connect' && request.method === 'POST') return { ok: true, authorizationUrl: '/api/admin/meta/connect' };
   if (module === 'configuracoes' && ['ga4', 'gsc'].includes(id) && action === 'test' && request.method === 'POST') return testGoogleConnection(id, settings, period, { env });
   if (module === 'configuracoes' && !id && request.method === 'PATCH') return await repository.saveSettings(data, user);
-  if (module === 'usuarios' && user.role === 'OWNER' && !action && (id && request.method === 'PATCH' || !id && request.method === 'POST')) return await repository.saveUser(data, user, id, hashPassword);
   if (module === 'leads' && id && request.method === 'POST') {
     if (action === 'notes') return await repository.note(id, data.body, user);
     if (action === 'convert') return await repository.convert(id, user);

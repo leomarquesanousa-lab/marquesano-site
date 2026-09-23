@@ -5,6 +5,7 @@ import { isInputError } from './validation.mjs';
 import { handleMetaApi } from './meta-api.mjs';
 import { paymentOperations } from './payment-api.mjs';
 import { validAdminRequestOrigin } from './origin.mjs';
+import { salesOperations } from './sales-api.mjs';
 
 const json = (body, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' } });
 export async function handleAdminApi(request, path, dependencies = {}) {
@@ -50,6 +51,7 @@ export async function handleAdminApi(request, path, dependencies = {}) {
       return response;
     }
     if (action === 'session' && request.method === 'GET') return json({ user });
+    if (path[0] === 'vendas') return json(await salesOperations(request,path.slice(1),user,store.repository,{env,fetcher:dependencies.fetcher||fetch}));
     if (path[0] === 'configuracoes' && path[1] === 'pagamentos') return json(await paymentOperations(request, path.slice(2), user, store.repository, { env, fetcher: dependencies.fetcher || fetch }));
     return json(await operations(request, path, user, store.repository, { env }));
   } catch (error) {

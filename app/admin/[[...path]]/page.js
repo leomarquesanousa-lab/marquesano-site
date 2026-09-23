@@ -3,7 +3,7 @@ import { currentAdmin, requireAdmin } from '../../server/admin/session';
 import { modules, canAccess, configured } from '../../server/admin/core.mjs';
 import { AdminShell, LoginForm } from '../ui';
 import styles from '../admin.module.css';
-import Operations, { PaymentsPage } from '../operations';
+import Operations, { PaymentsPage, SalesPage, UsersPage } from '../operations';
 
 export default async function AdminPage({ params }) {
   const path = (await params).path || [];
@@ -19,13 +19,13 @@ export default async function AdminPage({ params }) {
   const module = path[0] || 'dashboard';
   const { user, allowed } = await requireAdmin(module);
   if (!path.length) redirect('/admin/dashboard');
-  if (path.length > 2 || !Object.hasOwn(modules, module) || (path.length===2&&!['leads','clientes','campanhas'].includes(module))) notFound();
-  const navigation=['dashboard','analytics','marketing','seo','configuracoes','usuarios','auditoria'];
+  if (path.length > 2 || !Object.hasOwn(modules, module) || (path.length===2&&!['leads','clientes','campanhas','vendas'].includes(module))) notFound();
+  const navigation=['dashboard','vendas','analytics','marketing','seo','configuracoes','usuarios','auditoria'];
   const links = navigation.filter(key => canAccess(user.role,key)).map(key => ({ href: `/admin/${key}`, title: modules[key].title }));
   const descriptions={dashboard:'Acompanhe o alcance e os resultados do seu site.',analytics:'Entenda quem chega, de onde vem e o que faz no seu site.',marketing:'Sua central de mídia paga e resultados.',seo:'Saúde técnica e presença na pesquisa do Google.',configuracoes:'Gerencie as conexões do seu site.',usuarios:'Organize sua equipe e seus acessos.',auditoria:'Acompanhe as alterações no ambiente administrativo.'};
   return <AdminShell user={user} links={links}>
     {allowed ? <><div className={styles.pageHeading}><span className={styles.eyebrow}>MARQUESANO / ADMIN</span><h1>{module==='dashboard'?'Visão geral':modules[module].title}</h1><p>{descriptions[module]||modules[module].description}</p></div>
-      {module==='pagamentos' ? <PaymentsPage/> : <Operations module={module} user={user} recordId={path[1]||null}/>}
+      {module==='pagamentos' ? <PaymentsPage/> : module==='vendas'?<SalesPage recordId={path[1]||null}/>:module==='usuarios'?<UsersPage user={user}/>:<Operations module={module} user={user} recordId={path[1]||null}/>}
     </> : <><h1>Acesso restrito</h1><p>Sua conta não tem permissão para acessar este módulo.</p></>}
   </AdminShell>;
 }

@@ -131,6 +131,16 @@ test('timeout after provider acceptance reconciles without another POST, even wi
   assert.equal(search.searchParams.get('preapproval_plan_id'), f.rows[0].mercadopago_plan_id);
 });
 
+test('sales snapshot preserves original checkout amount when catalog changes before reconciliation', async t => {
+  const f=await fixture(t),data=f.body();
+  await assert.rejects(cardCheckout(request(data),'basico',f.repository,{env,fetcher:async(url,init)=>{const result=await f.options.fetcher(url,init);if(init.method==='POST')throw Error('timeout');return result;}}),e=>e.status===202);
+  await f.repository.plans.save('basico',{...await f.repository.plans.get('basico'),monthly_price_cents:19900});
+  await cardCheckout(request({...data,card_token_id:undefined}),'basico',f.repository,f.options);
+  const saved=(await f.repository.sales.detail(f.resources[0].id)).record;
+  assert.equal(saved.amount_cents,9900);assert.equal(saved.cycles,12);
+  assert.equal(f.calls.filter(c=>c.method==='POST').length,1);
+});
+
 test('unconfirmed provider status never produces a success receipt or another subscription', async t => {
   const f = await fixture(t), data = f.body();
   const fetcher = async (url, init) => {

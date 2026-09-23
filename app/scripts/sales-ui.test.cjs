@@ -1,0 +1,5 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const {renderSales}=require('./sales-ui-render.cjs');
+test('sales UI renders real response shape, plan filters and detail link',()=>{const html=renderSales();for(const text of ['Sincronizar com Mercado Pago','Assinaturas ativas','Professional','Business','Próximos vencimentos','buyer@example.invalid','/admin/vendas/test-subscription'])assert(html.includes(text),text);assert(!html.includes('Nenhuma assinatura registrada ainda.'));});
+test('empty sales UI has explicit empty state without invented customer',()=>{const html=renderSales('empty');assert(html.includes('Nenhuma assinatura registrada ainda.'));assert(!html.includes('buyer@example.invalid'));});
+test('sales detail renders safe payment history and communication log',()=>{const html=renderSales('detail');for(const text of ['Histórico de cobranças','Comunicações','test-payment','1234','Enviado'])assert(html.includes(text),text);assert(!html.includes('card_token_id'));});

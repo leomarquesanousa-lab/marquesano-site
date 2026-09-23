@@ -41,7 +41,7 @@ export function verifyWebhook(request, secret) {
   return id;
 }
 
-async function confirmedResources(topic, id, billing, { env, fetcher, signal }) {
+export async function confirmedResources(topic, id, billing, { env, fetcher, signal }) {
   async function get(path) {
     let response;
     try {response = await fetcher('https://api.mercadopago.com' + path, { headers: { Authorization: `Bearer ${env.MERCADOPAGO_ACCESS_TOKEN}` }, signal, cache: 'no-store', redirect: 'error' });} catch {throw new InputError('Confirmação temporariamente indisponível.', 503);}
@@ -86,12 +86,26 @@ async function confirmedResources(topic, id, billing, { env, fetcher, signal }) 
     const plan = await billing.plan(idOf(subscription.preapproval_plan_id));
     if (!plan) return { ignored: true };
     normalizedSubscription = { id: idOf(subscription.id), plan_id: plan, status: status(subscription.status), next_payment_date: date(subscription.next_payment_date), payer_email: typeof subscription.payer_email === 'string' ? subscription.payer_email.slice(0, 254) : null, updated_at: version(subscription.last_modified) };
+    const recurring=subscription.auto_recurring || {};
+    Object.assign(normalizedSubscription, {
+      created_at:date(subscription.date_created), external_reference:typeof subscription.external_reference==='string'?subscription.external_reference.slice(0,256):null,
+      amount_cents:Number.isFinite(recurring.transaction_amount)?Math.round(recurring.transaction_amount*100):null,
+      currency:/^[A-Z]{3}$/.test(recurring.currency_id||'')?recurring.currency_id:null,
+      cycles:Number.isInteger(recurring.repetitions)&&recurring.repetitions>0?recurring.repetitions:null,
+      end_date:date(recurring.end_date), cancelled_at:subscription.status==='cancelled'?date(subscription.last_modified):null,
+    });
   }
   if (invoice) normalizedInvoice = { id: idOf(invoice.id), subscription_id: normalizedSubscription.id, status: status(invoice.status), debit_date: date(invoice.debit_date), updated_at: version(invoice.last_modified) };
   if (payment) {
     const amount = Math.round(Number(payment.transaction_amount) * 100);
     if (payment.transaction_amount == null || !Number.isSafeInteger(amount) || amount < 0 || !/^[A-Z]{3}$/.test(payment.currency_id || '')) throw new InputError('Valor do pagamento inválido.', 502);
     normalizedPayment = { id: idOf(payment.id), subscription_id: normalizedSubscription?.id || null, invoice_id: normalizedInvoice?.id || null, status: status(payment.status), status_detail: typeof payment.status_detail === 'string' ? payment.status_detail.slice(0, 200) : null, amount_cents: amount, currency: payment.currency_id, paid_at: date(payment.date_approved), updated_at: version(payment.date_last_updated) };
+    Object.assign(normalizedPayment, { created_at:date(payment.date_created),
+      payment_method:typeof payment.payment_method_id==='string'?payment.payment_method_id.slice(0,80):null,
+      last_four:/^\d{4}$/.test(payment.card?.last_four_digits||'')?payment.card.last_four_digits:null,
+      external_reference:typeof payment.external_reference==='string'?payment.external_reference.slice(0,256):null,
+      refunded_cents:Number.isFinite(payment.transaction_amount_refunded)?Math.round(payment.transaction_amount_refunded*100):null,
+      refunded_at:Array.isArray(payment.refunds)?payment.refunds.filter(r=>r.status==='approved'&&r.date_created).map(r=>date(r.date_created)).sort().at(-1)||null:null });
   }
   // Hash only confirmed financial resource fields, not the unsigned notification event ID.
   const resource = topic === 'payment' ? normalizedPayment : topic === 'subscription_preapproval' ? normalizedSubscription : normalizedInvoice;
@@ -115,6 +129,8 @@ export async function handleMercadoPagoWebhook(request, dependencies = {}) {
     const billing = (dependencies.store || (await adminStore())).repository.billing;
     const resources = await confirmedResources(body.type, id, billing, { env, fetcher: dependencies.fetcher || fetch, signal: AbortSignal.timeout(18000) });
     if (resources.ignored) return json({ ok: true, ignored: true });
-    return json({ ok: true, ...(await billing.apply(resources)) });
+    const result=await billing.apply(resources);
+    await billing.notifications?.dispatch({env,fetcher:dependencies.fetcher||fetch}).catch(()=>console.error('SALES_EMAIL_DISPATCH_FAILED'));
+    return json({ ok: true, ...result });
   } catch (error) {return json({ error: isInputError(error) ? error.message : 'Não foi possível processar a notificação.' }, isInputError(error) ? error.status : 503);}
 }

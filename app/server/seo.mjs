@@ -27,7 +27,7 @@ export function seoDiagnostics() {
     const canonical=built?(html.match(/<link[^>]+rel="canonical"[^>]+href="([^"]+)"/)?.[1]||''):(source.includes('pageMetadata(')?officialSite+(path==='/'?'':path):'');
     return {path,indexable:built?!/noindex/.test(meta('robots')):indexable,title,description,canonical,missingAlt:built?[...html.matchAll(/<img\b[^>]*>/g)].filter(([tag])=>! /\balt=/.test(tag)).length:null,h1:built?(html.match(/<h1\b/g)||[]).length:null,structuredData:built?html.includes('application/ld+json'):null,checked:built?'HTML do último build':'Configuração fonte; execute build para auditar HTML'};
   });
-  return {domain:officialSite,canonical:officialSite,robots:'/robots.txt',sitemap:'/sitemap.xml',pages,total:pages.length,indexable:pages.filter(p=>p.indexable).length,noindex:pages.filter(p=>!p.indexable).length,missingTitle:pages.filter(p=>!p.title).length,missingDescription:pages.filter(p=>!p.description).length,missingCanonical:pages.filter(p=>!p.canonical).length};
+  return {domain:officialSite,canonical:officialSite,robots:'/robots.txt',sitemap:'/sitemap.xml',pages,total:pages.length,indexable:pages.filter(p=>p.indexable).length,noindex:pages.filter(p=>!p.indexable).length,missingTitle:pages.filter(p=>p.indexable&&!p.title).length,missingDescription:pages.filter(p=>p.indexable&&!p.description).length,missingCanonical:pages.filter(p=>p.indexable&&!p.canonical).length};
 }
 export async function publishedSeoStatus(fetcher=fetch) {
   const rows=await Promise.all(['/robots.txt','/sitemap.xml'].map(async path=>{

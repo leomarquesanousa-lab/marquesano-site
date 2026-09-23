@@ -62,8 +62,8 @@ test('state rejects wrong browser, replay, expiration, revoked sessions and chan
     const expired = await start(c);c.advance(600001);assert((await (await callback(c, expired)).text()).includes('STATE_INVALID'));
     const revoked = await start(c);await c.store.revokeSession(c.session);assert((await (await callback(c, revoked)).text()).includes('STATE_INVALID'));
     c.session = await c.store.createSession(c.user.id);const disabled = await start(c);
-    await c.store.repository.saveUser({ email: 'another@example.com', password: 'test-password-123456', role: 'OWNER', active: true }, c.user, null, async () => 'unused-test-hash');
-    await c.store.repository.saveUser({ email: c.user.email, role: 'VIEWER', active: true }, c.user, c.user.id, async () => 'unused-test-hash');
+    const another = await c.store.repository.saveUser({ email: 'another@example.com', password: 'test-password-123456', confirm_password: 'test-password-123456', role: 'OWNER', active: true }, c.user);
+    await c.store.repository.saveUser({ email: c.user.email, role: 'VIEWER', active: true }, { id: another.id, role: 'OWNER' }, c.user.id);
     assert((await (await callback(c, disabled)).text()).includes('STATE_INVALID'));
   } finally {await c.store.close();}
 });
@@ -86,7 +86,7 @@ test('all Meta routes enforce OWNER/ADMIN, POST origin and read-only permissions
     assert.equal((await api(c, 'disconnect', { method: 'POST', origin: 'https://evil.example', body: {} })).status, 403);
     assert.equal((await api(c, 'campaigns', { method: 'POST', body: {} })).status, 405);
     for (const role of ['MARKETING', 'SALES', 'VIEWER']) {
-      const saved = await c.store.repository.saveUser({ email: role + '@example.com', role, active: true, password: 'test-password-123456' }, c.user, null, async () => 'test-only-hash');
+      const saved = await c.store.repository.saveUser({ email: role + '@example.com', role, active: true, password: 'test-password-123456', confirm_password: 'test-password-123456' }, c.user);
       const session = await c.store.createSession(saved.id);
       for (const path of ['connect', 'status', 'ad-accounts', 'campaigns']) assert.equal((await api(c, path, { session })).status, 403);
     }

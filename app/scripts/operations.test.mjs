@@ -17,8 +17,8 @@ const period = () => range(new URLSearchParams());
 async function setup() {const store = await createAdminStore(':memory:');await store.createOwner('owner@example.com', 'test-password-long-123');const actor = await store.authenticate('owner@example.com', 'test-password-long-123');return { store, repo: store.repository, actor };}
 test('migration preserves records and is idempotent', async () => {
   const { db } = await testStore();try {
-    await db.exec("INSERT INTO users VALUES('old-owner','owner@example.com','existing-hash','OWNER',1);INSERT INTO sessions VALUES('old-session','old-owner',9999999999999)");
-    await migrate(db);await migrate(db);assert.equal((await db.prepare('SELECT count(*) AS n FROM schema_migrations').get()).n, 6);assert.equal((await db.prepare('SELECT password_hash FROM users').get()).password_hash, 'existing-hash');assert.equal((await db.prepare('SELECT user_id FROM sessions').get()).user_id, 'old-owner');
+    await db.exec("INSERT INTO users(id,email,password_hash,role,active) VALUES('old-owner','owner@example.com','existing-hash','OWNER',1);INSERT INTO sessions VALUES('old-session','old-owner',9999999999999)");
+    await migrate(db);await migrate(db);assert.equal((await db.prepare('SELECT count(*) AS n FROM schema_migrations').get()).n, 8);assert.equal((await db.prepare('SELECT password_hash FROM users').get()).password_hash, 'existing-hash');assert.equal((await db.prepare('SELECT user_id FROM sessions').get()).user_id, 'old-owner');
     await db.prepare("UPDATE subscription_plans SET monthly_price_cents=12345 WHERE id='basico'").run();await migrate(db);assert.equal((await db.prepare("SELECT monthly_price_cents FROM subscription_plans WHERE id='basico'").get()).monthly_price_cents, 12345);assert.equal((await db.prepare('SELECT count(*) AS n FROM subscription_plans').get()).n, 3);
   } finally {await db.close();}
 });
@@ -65,7 +65,7 @@ test('attribution, first/last touch, real campaign counts and settings validatio
 test('user management preserves last owner, hashes passwords and revokes sessions', async () => {
   const { store, repo, actor } = await setup();try {
     await assert.rejects(repo.saveUser({ ...actor, role: 'ADMIN', active: true }, actor, actor.id, hashPassword));
-    const created = await repo.saveUser({ email: 'sales@example.com', role: 'SALES', active: true, password: 'test-sales-password-123' }, actor, null, hashPassword);
+    const created = await repo.saveUser({ email: 'sales@example.com', role: 'SALES', active: true, password: 'test-sales-password-123', confirm_password: 'test-sales-password-123' }, actor, null, hashPassword);
     const token = await store.createSession(created.id);assert(await store.getSession(token));
     await repo.saveUser({ email: 'sales@example.com', role: 'VIEWER', active: false }, actor, created.id, hashPassword);assert.equal(await store.getSession(token), null);
     const rows = (await repo.list('usuarios', new URLSearchParams(), period())).rows;assert(rows.every((row) => !('password_hash' in row)));
@@ -126,4 +126,6 @@ test('integration test routes require settings permissions and do not save setti
 test('SEO discovers public pages and excludes admin/API', () => {
   const pages = publicPages();assert(pages.length >= 12);assert(pages.every((p) => !p.path.startsWith('/admin') && !p.path.startsWith('/api')));assert(pages.some((p) => p.path === '/'));
   const report = seoDiagnostics();assert.equal(report.missingTitle, 0);assert.equal(report.missingDescription, 0);assert.equal(report.missingCanonical, 0);
+  assert.equal(report.pages.find(p => p.path === '/checkout/homologacao').indexable, false);
+  for (const field of ['Title', 'Description', 'Canonical']) assert.equal(report['missing' + field], report.pages.filter(p => p.indexable && !p[field.toLowerCase()]).length);
 });

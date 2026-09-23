@@ -1,5 +1,6 @@
 import { migratePlans, ensurePlans } from './plan-store.mjs';
 import { migrateBilling } from './billing-store.mjs';
+import { migrateSales } from './sales-migration.mjs';
 export async function migrate(db) {
   return db.transaction(async () => {
     await db.exec('CREATE TABLE IF NOT EXISTS schema_migrations (version BIGINT PRIMARY KEY, applied_at TEXT NOT NULL)');
@@ -60,6 +61,18 @@ export async function migrate(db) {
     if (!(await db.prepare('SELECT version FROM schema_migrations WHERE version=6').get())) {
       await ensurePlans(db);
       await db.prepare('INSERT INTO schema_migrations VALUES (6,?)').run(new Date().toISOString());
+    }
+    if (!(await db.prepare('SELECT version FROM schema_migrations WHERE version=7').get())) {
+      await migrateSales(db);
+      await db.prepare('INSERT INTO schema_migrations VALUES (7,?)').run(new Date().toISOString());
+    }
+    if (!(await db.prepare('SELECT version FROM schema_migrations WHERE version=8').get())) {
+      await db.exec(`ALTER TABLE users ADD COLUMN name TEXT NOT NULL DEFAULT '';
+        ALTER TABLE users ADD COLUMN created_at TEXT;
+        ALTER TABLE users ALTER COLUMN created_at SET DEFAULT to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
+        ALTER TABLE users ADD COLUMN deleted_at TEXT;
+        CREATE UNIQUE INDEX users_email_case_insensitive ON users(lower(email));`);
+      await db.prepare('INSERT INTO schema_migrations VALUES(8,?)').run(new Date().toISOString());
     }
   });
 }

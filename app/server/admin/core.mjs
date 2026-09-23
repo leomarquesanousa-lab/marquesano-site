@@ -14,6 +14,7 @@ async function diagnosticStage(stage, operation) {
 }
 export const roles = ['OWNER', 'ADMIN', 'MARKETING', 'SALES', 'VIEWER'];
 export const modules = {
+  vendas: { title: 'Vendas', description: 'Assinaturas, recebimentos e próximos vencimentos.', roles: ['OWNER','ADMIN'] },
   dashboard: { title: 'Dashboard', description: 'Visão geral do ambiente administrativo.', roles },
   marketing: { title: 'Marketing', description: 'Origens, campanhas e conversões registradas.', roles: ['OWNER', 'ADMIN', 'MARKETING'] },
   analytics: { title: 'Analytics', description: 'Dados locais e relatórios oficiais do Google.', roles: ['OWNER', 'ADMIN', 'MARKETING', 'VIEWER'] },
@@ -24,7 +25,7 @@ export const modules = {
   pagamentos: { title: 'Pagamentos', description: 'Assinaturas, pagamentos e configuração dos planos.', roles: ['OWNER', 'ADMIN'] },
   formularios: { title: 'Formulários', description: 'Submissões recebidas e notificações por e-mail.', roles: ['OWNER', 'ADMIN', 'SALES'] },
   campanhas: { title: 'Campanhas', description: 'Campanhas e links de atribuição.', roles: ['OWNER', 'ADMIN', 'MARKETING'] },
-  usuarios: { title: 'Usuários', description: 'Contas administrativas e permissões.', roles: ['OWNER'] },
+  usuarios: { title: 'Usuários', description: 'Contas administrativas e permissões.', roles: ['OWNER','ADMIN'] },
   auditoria: { title: 'Auditoria', description: 'Histórico das operações administrativas.', roles: ['OWNER', 'ADMIN'] }
 };
 export function canAccess(role, module) {return Object.hasOwn(modules, module) && modules[module].roles.includes(role);}

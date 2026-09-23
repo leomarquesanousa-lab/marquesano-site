@@ -4,11 +4,14 @@ import { createMetaStore } from './meta-store.mjs';
 import { createPlanStore } from './plan-store.mjs';
 import { createBillingStore } from './billing-store.mjs';
 import { createCheckoutStore } from './checkout-store.mjs';
+import { createUserStore } from './user-store.mjs';
+import { createSalesStore } from './sales-store.mjs';
 
 const plain = (row) => row ? { ...row } : null;
 const parse = (value) => {try {return JSON.parse(value || '{}');} catch {return {};}};
 const settingsKeys = ['GTM_CONTAINER_ID', 'GA4_MEASUREMENT_ID', 'GA4_PROPERTY_ID', 'GSC_SITE_URL', 'TRACKING_ENABLED'];
 export function createRepository(db, now = Date.now) {
+  const users = createUserStore(db, now);
   const time = () => new Date(now()).toISOString();
   const one = async (sql, ...args) => plain(await db.prepare(sql).get(...args));
   const all = async (sql, ...args) => (await db.prepare(sql).all(...args)).map(plain);
@@ -95,7 +98,7 @@ export function createRepository(db, now = Date.now) {
     });
   }
   return {
-    list, detail, save, meta: createMetaStore(db, now), plans: createPlanStore(db, now), billing: createBillingStore(db, now), checkout: createCheckoutStore(db),
+    list, detail, save, users, meta: createMetaStore(db, now), plans: createPlanStore(db, now), billing: createBillingStore(db, now), checkout: createCheckoutStore(db), sales: createSalesStore(db, now),
     async note(id, body, actor) {return await tx(async () => {await requireRow('leads', id);const noteId = randomUUID();await run('INSERT INTO lead_notes VALUES (?,?,?,?,?)', noteId, id, actor.id, text(body, 4000, true), time());await audit(actor, 'note', 'leads', id);return { id: noteId };});},
     async convert(id, actor) {return await tx(async () => {const lead = await requireRow('leads', id);if (lead.status !== 'WON') throw new InputError('Somente leads ganhos podem virar clientes.');const existing = await one('SELECT id FROM clients WHERE lead_id=?', id);if (existing) return existing;const clientId = randomUUID();await run('INSERT INTO clients (id,lead_id,company_id,name,email,phone,whatsapp,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)', clientId, id, lead.company_id, lead.name, lead.email, lead.phone, lead.whatsapp, 'ACTIVE', time(), time());await audit(actor, 'convert', 'leads', id);return { id: clientId };});},
     async settings(env = process.env) {const saved = Object.fromEntries((await all('SELECT key,value FROM settings')).map((r) => [r.key, r.value]));return Object.fromEntries(settingsKeys.map((key) => [key, saved[key] ?? env[key] ?? (key === 'TRACKING_ENABLED' ? 'false' : '')]));},
@@ -104,17 +107,7 @@ export function createRepository(db, now = Date.now) {
         for (const [key, value] of Object.entries(data)) {const v = text(value, 300);if (v && !patterns[key].test(v)) throw new InputError(`${key} inválido.`);await run('INSERT INTO settings VALUES (?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at', key, v, time());}
         await audit(actor, 'settings', 'configuracoes', 'tracking');return { ok: true };});},
     audit,
-    async saveUser(data, actor, id, hashPassword) {
-      const address = email(data.email),role = choice(data.role, ['OWNER', 'ADMIN', 'MARKETING', 'SALES', 'VIEWER']);
-      if (typeof data.active !== 'boolean') throw new InputError();
-      let hash = null;if (data.password) {try {hash = await hashPassword(data.password);} catch {throw new InputError('Use uma senha de 12 caracteres ou mais (máximo de 256 bytes).');}}
-      return await tx(async () => {const old = id ? await requireRow('users', id) : null;
-        if (old?.role === 'OWNER' && old.active && (!data.active || role !== 'OWNER') && (await one("SELECT count(*) AS n FROM users WHERE role='OWNER' AND active=1")).n <= 1) throw new InputError('Não é possível remover o último OWNER ativo.', 409);
-        if (await one('SELECT id FROM users WHERE email=? AND id<>?', address, id || '')) throw new InputError('E-mail já cadastrado.', 409);
-        if (!old && !hash) throw new InputError('Informe uma senha.');
-        id = id || randomUUID();if (old) {await run('UPDATE users SET email=?,role=?,active=?,password_hash=? WHERE id=?', address, role, Number(data.active), hash || old.password_hash, id);await run('DELETE FROM sessions WHERE user_id=?', id);} else await run('INSERT INTO users (id,email,password_hash,role,active) VALUES (?,?,?,?,?)', id, address, hash, role, Number(data.active));
-        await audit(actor, old ? 'update' : 'create', 'usuarios', id);return { id };});
-    },
+    saveUser: (data, actor, id) => users.save(data, actor, id),
     async captureContact(clean, key, visitorId, fallback = {}) {return await tx(async () => {
         const previous = await one('SELECT * FROM form_submissions WHERE idempotency_key=?', key);if (previous) return previous;
         const visitor = visitorId && (await one('SELECT id FROM visitors WHERE id=?', visitorId));
