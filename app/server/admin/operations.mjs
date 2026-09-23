@@ -18,14 +18,20 @@ export async function operations(request, path, user, repository, { env = proces
     if (module === 'marketing') return { ...(await repository.report(period)), settings, integrations, meta: await metaStatus(env, repository.meta), googleAds: { status: 'Integração futura' } };
     if (['dashboard', 'analytics'].includes(module)) {
       const trace = randomUUID();
-      console.info('ANALYTICS_REQUEST', { trace, module, remote: params.get('remote') === '1', property_available: Boolean(settings.GA4_PROPERTY_ID), service_account_available: Boolean(process.env.GOOGLE_CLIENT_EMAIL && process.env.GOOGLE_PRIVATE_KEY), start: period.start, end: period.end });
+      console.info('GA4_PROPERTY_ID_AVAILABLE=' + Boolean(settings.GA4_PROPERTY_ID));
+      console.info('GOOGLE_SERVICE_ACCOUNT_EMAIL_AVAILABLE=' + Boolean(process.env.GOOGLE_CLIENT_EMAIL));
+      console.info('GOOGLE_PRIVATE_KEY_AVAILABLE=' + Boolean(process.env.GOOGLE_PRIVATE_KEY));
       try {
         const result = { ...(await repository.report(period)), settings, integrations, ...(params.get('remote') === '1' ? { google: await googleReport('ga4', settings, period, { trace }) } : {}) };
         const summary = result.google?.reports?.summary;
-        console.info('ANALYTICS_RESPONSE', { trace, status: result.google?.status || 'remote_not_requested', code: result.google?.code, rows: summary?.rowCount || 0, aggregates: Object.fromEntries(['activeUsers', 'sessions', 'screenPageViews'].map(key => [key, summary ? Number(summary.rows[0]?.[summary.columns.indexOf(key)] || 0) : null])) });
+        if (summary) for (const [key, label] of [['activeUsers', 'ACTIVE_USERS'], ['sessions', 'SESSIONS'], ['screenPageViews', 'PAGE_VIEWS']]) {
+          const value = Number(summary.rows[0]?.[summary.columns.indexOf(key)] || 0);
+          console.info('GA4_SUMMARY_' + label + '=' + (Number.isFinite(value) ? value : 0));
+        }
         return result;
       } catch (error) {
-        console.error('ANALYTICS_FAILED', { trace, name: ['Error', 'TypeError', 'RangeError'].includes(error.name) ? error.name : 'Error' });
+        console.error('GA4_ERROR_NAME=' + (['Error', 'TypeError', 'RangeError'].includes(error.name) ? error.name : 'Error'));
+        console.error('GA4_ERROR_MESSAGE=Falha interna ao preparar a resposta Analytics.');
         throw error;
       }
     }

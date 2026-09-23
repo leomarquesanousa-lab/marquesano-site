@@ -50,13 +50,20 @@ async function token(scope,env,fetcher) {
 }
 export async function googleReport(provider,settings,period,{env=process.env,fetcher=fetch,trace}={}) {
   const initial=integrationStatus(settings,env)[provider];
+  if(provider==='ga4' && trace) {
+    console.info('GA4_REQUEST_STARTED');
+    if(initial?.status!=='Configurado') {
+      console.error('GA4_ERROR_NAME=ConfigurationError');
+      console.error('GA4_ERROR_MESSAGE=Propriedade ou credenciais Google ausentes.');
+    }
+  }
   if(initial?.status!=='Configurado')return {status:'Não configurado',reports:null};
   try {
     const scope=provider==='ga4'?'https://www.googleapis.com/auth/analytics.readonly':'https://www.googleapis.com/auth/webmasters.readonly';
     const access=await token(scope,env,fetcher);
     async function post(url,body) {
       const response=await fetcher(url,{method:'POST',headers:{Authorization:`Bearer ${access}`,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});
-      if(provider==='ga4' && trace) console.info('GA4_RUN_REPORT_HTTP', { trace, http_status: response.status, dimensions: body.dimensions.map(item=>item.name), metrics: body.metrics.map(item=>item.name) });
+      if(provider==='ga4' && trace) console.info('GA4_HTTP_STATUS=' + response.status);
       if(!response.ok) {
         const error=await providerError(response,provider);
         if(provider==='gsc'&&error.code==='ACCESS_DENIED') {
@@ -74,7 +81,7 @@ export async function googleReport(provider,settings,period,{env=process.env,fet
         throw error;
       }
       const result = await response.json();
-      if(provider==='ga4' && trace) console.info('GA4_RUN_REPORT_ROWS', { trace, rows: Array.isArray(result.rows) ? result.rows.length : 0, row_count: result.rowCount || 0 });
+      if(provider==='ga4' && trace) console.info('GA4_ROWS=' + (Array.isArray(result.rows) ? result.rows.length : 0));
       return result;
     }
     if(provider==='ga4') {
@@ -92,9 +99,13 @@ export async function googleReport(provider,settings,period,{env=process.env,fet
     })));
     return {status:'Ativo',reports};
   } catch(error) {
-    if(provider==='ga4' && trace) console.error('GA4_REPORT_FAILED', { trace, http_status: error.httpStatus || null, code: error.code || 'CONNECTION_ERROR' });
     const messages={400:'O Google recusou a consulta. Confira o identificador da propriedade e o período.',401:'O Google recusou a autenticação. Confira a Service Account no servidor.',403:'Acesso negado pelo Google. Confira as permissões da Service Account e se a API está habilitada.',404:'Propriedade não encontrada no Google. Confira o identificador salvo.',429:'Limite de consultas do Google atingido. Aguarde e tente novamente.'};
     const message=diagnostics[error.code] || messages[error.httpStatus] || (error.auth?'Confira as credenciais no servidor e o acesso da conta de serviço à propriedade.':['TimeoutError','AbortError'].includes(error.name)?'O Google demorou para responder. Tente novamente.':'Não foi possível consultar a API oficial. Tente novamente.');
+    if(provider==='ga4' && trace) {
+      if(error.httpStatus) console.info('GA4_HTTP_STATUS=' + error.httpStatus);
+      console.error('GA4_ERROR_NAME=' + (['Error','TypeError','RangeError','SyntaxError','TimeoutError','AbortError'].includes(error.name) ? error.name : 'Error'));
+      console.error('GA4_ERROR_MESSAGE=' + message);
+    }
     return {status:error.auth?'Erro de autenticação':'Erro de conexão',reports:null,code:error.code||'CONNECTION_ERROR',message};
   }
 }
