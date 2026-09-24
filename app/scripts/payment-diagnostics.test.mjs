@@ -2,6 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mpRequest } from '../server/admin/mercadopago.mjs';
 const env = { MERCADOPAGO_SITE_ORIGIN: 'https://marquesano.com.br', ADMIN_SITE_ORIGIN: 'https://marquesano.com.br', MERCADOPAGO_ACCESS_TOKEN: 'private-access-token', DATABASE_URL: 'postgresql://private-secret/db' };
+test('diagnostics redact device and CPF and allow only specified fields', async () => {
+  const original = console.info, logs = [];
+  console.info = (...args) => logs.push(args);
+  try {
+    await assert.rejects(mpRequest('/preapproval', { env, method: 'POST', deviceId: 'sensitive-device-fixture',
+      fetcher: async () => Response.json({ message: 'sensitive-device-fixture CPF 123.456.789-09 12345678909', code: 'rejected', cause: [{ secret: 'never-output' }] }, { status: 400 }) }));
+    const output = JSON.stringify(logs);
+    for (const value of ['sensitive-device-fixture', '123.456.789-09', '12345678909', 'never-output']) assert(!output.includes(value));
+    assert.deepEqual(Object.keys(logs[0][1]).sort(), ['code','endpoint','http_status','message']);
+  } finally { console.info = original; }
+});
 test('preapproval logs provider errors with redaction and keeps client response friendly', async () => {
   const original = console.info, logs = [];
   console.info = (...args) => logs.push(args);
@@ -13,7 +24,8 @@ test('preapproval logs provider errors with redaction and keeps client response 
     const text = JSON.stringify(logs);
     for (const secret of ['private-card-token', 'private-access-token', '4111', '123', 'postgresql://', 'payer@example.test']) assert(!text.includes(secret));
     assert.equal(logs[0][1].http_status, 400);
-    assert.equal(logs[0][1].cause[0].code, 'invalid_card_token');
+    assert.equal(logs[0][1].code, 'bad_request');
+    assert.equal(logs[0][1].cause, undefined);
     assert.equal(logs[0][1].request_id, 'request-test-id');
   } finally { console.info = original; }
 });

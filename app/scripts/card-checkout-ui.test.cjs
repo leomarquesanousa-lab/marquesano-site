@@ -26,12 +26,13 @@ function harness(t) {
   let config, token = 'official_token_for_test';
   const original = { window: global.window, fetch: global.fetch, sessionStorage: global.sessionStorage };
   const redirects = [], calls = [], storage = new Map();
-  global.window = { MercadoPago: class { cardForm(options) { config = options; options.callbacks.onReady(); return { getCardFormData: () => ({ token, cardNumber: 'must-not-be-sent', securityCode: 'must-not-be-sent', amount: 1 }), unmount() {} }; } }, location: { assign: value => redirects.push(value) } };
+  global.window = { MP_DEVICE_SESSION_ID: 'device-session-fixture', MercadoPago: class { cardForm(options) { config = options; options.callbacks.onReady(); return { getCardFormData: () => ({ token, cardNumber: 'must-not-be-sent', securityCode: 'must-not-be-sent', amount: 1 }), unmount() {} }; } }, location: { assign: value => redirects.push(value) } };
   global.sessionStorage = { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) };
   let response = { ok: true, status: 200, json: async () => ({ url: '/checkout/sucesso' }) };
   global.fetch = async (...args) => { calls.push(args); return response; };
   t.after(() => Object.assign(global, original));
   const Component = load('checkout/CardCheckout.js', {
+    '../config/payment-security.mjs': require('../config/payment-security.mjs'),
     react: hooks, 'next/script': { __esModule: true, default: 'script' },
     '../config/plans.mjs': { priceLabel: cents => 'R$ ' + cents / 100 },
     './Checkout.module.css': { __esModule: true, default: {} },
@@ -60,12 +61,50 @@ test('official SDK uses iframe card fields, sends only token and allowed data, t
   assert.equal(h.calls.length, 1);
   assert.equal(h.calls[0][0], '/api/checkout/professional');
   const data = JSON.parse(h.calls[0][1].body);
-  assert.deepEqual(Object.keys(data).sort(), ['card_token_id','payer_email','request_id','revision','terms']);
+  assert.deepEqual(Object.keys(data).sort(), ['card_token_id','device_id','payer_email','request_id','revision','terms']);
   assert.equal(data.card_token_id, 'official_token_for_test');
+  assert.equal(data.device_id, 'device-session-fixture');
   assert.equal(data.payer_email, 'buyer@example.test');
   assert.equal(JSON.stringify(data).includes('must-not-be-sent'), false);
   assert.equal([...h.storage.values()].some(v => v.includes('official_token')), false);
   assert.deepEqual(h.redirects, ['/checkout/sucesso']);
+});
+
+test('security script is unique, checkout-scoped; double submission and rejection cooldown block requests', async t => {
+  const h = harness(t);
+  const script = h.render().filter(n => n.props?.src === 'https://www.mercadopago.com/v2/security.js');
+  assert.equal(script.length, 1);
+  assert.equal(script[0].props.id, 'mercadopago-security');
+  assert.equal(script[0].props.view, 'checkout');
+  h.setResponse({ ok: false, status: 422, json: async () => ({ error: 'Rejected' }) });
+  h.config.callbacks.onSubmit({ preventDefault() {} });
+  h.config.callbacks.onSubmit({ preventDefault() {} });
+  await h.tick();
+  h.config.callbacks.onSubmit({ preventDefault() {} });
+  await h.tick();
+  assert.equal(h.calls.length, 1);
+  assert.equal([...h.storage.values()].some(v => v.includes('device-session')), false);
+});
+
+test('device wait is bounded, accepts delayed value and rejects header injection', async () => {
+  const { waitForDeviceId, validDeviceId } = await import('../config/payment-security.mjs');
+  let reads = 0, waits = 0;
+  assert.equal(await waitForDeviceId(() => ++reads === 3 ? 'device-fixture' : undefined, async () => waits++), 'device-fixture');
+  assert.equal(waits, 2);
+  waits = 0;
+  assert.equal(await waitForDeviceId(() => undefined, async () => waits++), null);
+  assert.equal(waits, 11);
+  assert.equal(validDeviceId('device\r\nAuthorization: bad'), false);
+});
+
+test('missing device shows friendly error without sending token or creating an attempt', async t => {
+  const h = harness(t);
+  delete global.window.MP_DEVICE_SESSION_ID;
+  h.config.callbacks.onSubmit({ preventDefault() {} });
+  await new Promise(resolve => setTimeout(resolve, 2400));
+  assert.equal(h.calls.length, 0);
+  assert.equal(h.storage.size, 0);
+  assert.match(h.render().find(n => n.props?.role === 'alert').props.children, /verificação de segurança/);
 });
 
 test('required consent blocks submission; rejection stays inline and preserves non-sensitive fields', async t => {

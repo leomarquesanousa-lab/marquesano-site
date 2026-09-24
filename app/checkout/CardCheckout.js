@@ -3,6 +3,7 @@
 import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
 import { priceLabel } from '../config/plans.mjs';
+import { CHECKOUT_COOLDOWN_MS, DEVICE_UNAVAILABLE, waitForDeviceId } from '../config/payment-security.mjs';
 import styles from './Checkout.module.css';
 
 export default function CardCheckout({ code, revision, amount, publicKey, diagnostics = false }) {
@@ -10,6 +11,7 @@ export default function CardCheckout({ code, revision, amount, publicKey, diagno
   const sdkForm = useRef(null);
   const busy = useRef(false);
   const requestId = useRef(null);
+  const retryAfter = useRef(0);
   const [sdkReady, setSdkReady] = useState(false);
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -28,9 +30,12 @@ export default function CardCheckout({ code, revision, amount, publicKey, diagno
 
   async function send(token) {
     if (busy.current) return;
+    if (token && Date.now() < retryAfter.current) { setError('Aguarde 15 segundos antes de tentar novamente.'); return; }
     if (!form.current.elements.terms.checked) { setError('Leia e aceite os Termos de Serviço para continuar.'); return; }
     busy.current = true; setLoading(true); setError('');
     try {
+      const deviceId = token ? await waitForDeviceId() : null;
+      if (token && !deviceId) { setError(DEVICE_UNAVAILABLE); return; }
       if (!requestId.current) {
         try { requestId.current = sessionStorage.getItem(storageKey); } catch { /* Memory fallback. */ }
         if (!/^[a-f0-9]{64}$/.test(requestId.current || '')) requestId.current = Array.from(crypto.getRandomValues(new Uint8Array(32)), n => n.toString(16).padStart(2, '0')).join('');
@@ -38,11 +43,12 @@ export default function CardCheckout({ code, revision, amount, publicKey, diagno
       }
       const response = await fetch(`/api/checkout/${code}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(45000),
-        body: JSON.stringify({ revision, request_id: requestId.current, payer_email: form.current.elements.email.value, terms: true, ...(token ? { card_token_id: token } : {}) }),
+        body: JSON.stringify({ revision, request_id: requestId.current, payer_email: form.current.elements.email.value, terms: true, ...(token ? { card_token_id: token, device_id: deviceId } : {}) }),
       });
       const data = await response.json();
       if (response.ok && data.url === '/checkout/sucesso') { window.location.assign(data.url); return; }
       setVerify(response.status === 202 || response.status >= 500);
+      if (response.status === 422 || response.status === 429) retryAfter.current = Date.now() + CHECKOUT_COOLDOWN_MS;
       if (response.status === 422) {
         requestId.current = null;
         try { sessionStorage.removeItem(storageKey); } catch { /* Memory fallback. */ }
@@ -91,9 +97,15 @@ export default function CardCheckout({ code, revision, amount, publicKey, diagno
 
   return <>
     {publicKey && <Script src="https://sdk.mercadopago.com/js/v2" strategy="afterInteractive" onReady={() => setSdkReady(true)} onError={() => setError('Não foi possível carregar o pagamento seguro. Recarregue a página.')} />}
-    <form ref={form} id="marquesano-card-form" className={styles.form} onSubmit={event => event.preventDefault()}>
+    {publicKey && <Script id="mercadopago-security" src="https://www.mercadopago.com/v2/security.js" view="checkout" strategy="afterInteractive" onError={() => setError(DEVICE_UNAVAILABLE)} />}
+    <form ref={form} id="marquesano-card-form" className={styles.form} onSubmit={event => event.preventDefault()} onSubmitCapture={event => {
+      if (busy.current || Date.now() < retryAfter.current || !form.current.elements.cardholder_name.value.trim()) {
+        event.preventDefault(); event.stopPropagation();
+        if (!busy.current) setError(Date.now() < retryAfter.current ? 'Aguarde 15 segundos antes de tentar novamente.' : 'Informe o nome do titular do cartão.');
+      }
+    }}>
       <label htmlFor="mp-card-email">E-mail<input id="mp-card-email" name="email" type="email" autoComplete="email" maxLength={254} required readOnly={loading || verify} /></label>
-      <label htmlFor="mp-card-name">Nome do titular<input id="mp-card-name" autoComplete="cc-name" required /></label>
+      <label htmlFor="mp-card-name">Nome do titular<input id="mp-card-name" name="cardholder_name" autoComplete="cc-name" maxLength={200} required /></label>
       <div><p id="card-number-label">Número do cartão</p><div id="mp-card-number" className={styles.secureField} aria-labelledby="card-number-label" /></div>
       <div className={styles.pair}><div><p id="expiry-label">Validade</p><div id="mp-card-expiry" className={styles.secureField} aria-labelledby="expiry-label" /></div><div><p id="cvv-label">Código de segurança</p><div id="mp-card-cvv" className={styles.secureField} aria-labelledby="cvv-label" /></div></div>
       <div className={styles.pair}><label htmlFor="mp-doc-type">Documento<select id="mp-doc-type" /></label><label htmlFor="mp-doc-number">Número do documento<input id="mp-doc-number" inputMode="numeric" required /></label></div>

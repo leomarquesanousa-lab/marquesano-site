@@ -128,4 +128,52 @@ Para verificar visualmente as três páginas com Chrome/Edge instalado, sem pree
 
 ## Public payment URLs
 
+## Device ID e avaliação de risco no checkout integrado
+
+`checkout/CardCheckout.js`, compartilhado pelos três planos, carrega o script oficial
+`https://www.mercadopago.com/v2/security.js` com `view="checkout"`, via Next Script e ID
+estável `mercadopago-security`. Ao enviar, aguarda no máximo 2,2 segundos pelo
+`window.MP_DEVICE_SESSION_ID`. Ausência ou formato inválido interrompe o envio com
+mensagem de segurança; nenhum pedido de assinatura é iniciado nesse caso.
+
+O navegador envia `device_id` para `/api/checkout/[plan]`. O backend valida uma string
+opaca ASCII imprimível de até 1024 caracteres, sem espaços/controles, e `mpRequest`
+envia exclusivamente no header `X-meli-session-id` de `POST /preapproval`.
+Authorization, Content-Type e o payload homologado permanecem preservados.
+O Device ID não é gravado no banco, sessionStorage ou logs. A verificação de uma
+tentativa anterior não exige novo token nem Device ID e nunca repete o POST.
+
+Dados do comprador: e-mail continua validado no servidor; nome do titular (obrigatório,
+sem aceitar somente espaços, até 200 caracteres) e identificação continuam no CardForm
+para tokenização oficial. Não dividimos nomes nem inventamos sobrenomes. O modelo
+oficial de criação de assinatura aceita `payer_email` e `card_token_id`, mas não oferece
+campos diretos de nome, sobrenome ou CPF; não adicionamos um objeto `payer` incompatível.
+Número do cartão, validade e CVV continuam nos iframes oficiais.
+
+Após recusa há cooldown de 15 segundos no cliente e servidor. No servidor reutiliza-se
+`public_limits` por impressão criptográfica de plano/e-mail/revisão, sob a transação
+existente: mudar `request_id` não permite uma rajada idêntica. Não há migration nova.
+Depois do intervalo é possível tentar novamente com token novo. A idempotência já
+existente continua protegendo tentativas autorizadas ou de resultado incerto; não há
+retry automático após recusa. O cooldown do servidor também vale após recarregar a página.
+
+Logs `MERCADOPAGO_RESPONSE`: somente endpoint, HTTP status, code, status, status_detail,
+message sanitizada e request_id, quando disponíveis. Não se imprime payload, cause
+completa, CPF, tokens, credenciais ou Device ID. Recusa explícita por risco recebe:
+“Não foi possível aprovar este pagamento. Confira seus dados ou tente outro cartão.
+Evite repetir várias tentativas em sequência.” O tratamento de `CC_VAL_433` foi mantido.
+
+Troubleshooting: se a verificação de segurança não iniciar, confira bloqueio do
+`security.js` por extensão/rede e recarregue após desbloqueá-lo. Para recusa, utilize
+status/code/request_id sanitizados ao contatar o Mercado Pago. Device ID fornece um
+sinal adicional de risco; não garante aprovação nem comprova sozinho a causa de uma
+recusa anterior. Homologação local continua separada e bloqueada em produção.
+
+Referências oficiais consultadas:
+- [Recomendações para assinaturas e Device ID](https://www.mercadopago.com.br/developers/en/docs/subscriptions/how-tos/improve-payment-approval/recommendations)
+- [POST /preapproval](https://www.mercadopago.com.br/developers/en/reference/online-payments/subscriptions/create-preapproval/post)
+- [Modelo PreApprovalRequest do SDK oficial](https://github.com/mercadopago/sdk-nodejs/blob/master/src/clients/preApproval/commonTypes.ts)
+
+## Origem pública configurada
+
 Configure `MERCADOPAGO_SITE_ORIGIN=https://marquesano.com.br` on the server (including Hostinger). This controls Mercado Pago back_url and the displayed webhook URL. It has no fallback to ADMIN_SITE_ORIGIN. Local checkout at http://localhost:3000 uses the same CSRF policy with an explicit development origin; production accepts only the two Marquesano HTTPS origins. Restart the local server after changing environment configuration.

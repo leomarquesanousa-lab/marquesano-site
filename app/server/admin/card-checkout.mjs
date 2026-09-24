@@ -3,6 +3,7 @@ import { checkoutPlans } from '../../config/checkout-plans.mjs';
 import { checkRemote, mpRequest } from './mercadopago.mjs';
 import { InputError, email, readJson } from './validation.mjs';
 import { validPaymentOrigin, paymentSiteOrigin } from './payment-origin.mjs';
+import { validDeviceId, DEVICE_UNAVAILABLE, RISK_DECLINED } from '../../config/payment-security.mjs';
 
 export const receiptCookie = 'marquesano_checkout_receipt';
 export const attemptKey = value => createHash('sha256').update(value).digest('hex');
@@ -16,8 +17,8 @@ export async function cardCheckout(request, code, repository, options = {}) {
   const env = options.env || process.env;
   if (!validPaymentOrigin(request, env)) throw new InputError('Origem inválida.', 403);
   if (!Object.hasOwn(checkoutPlans, code)) throw new InputError('Plano não encontrado.', 404);
-  const data = await readJson(request, 2048);
-  const allowed = ['payer_email', 'card_token_id', 'revision', 'request_id', 'terms'];
+  const data = await readJson(request, 4096);
+  const allowed = ['payer_email', 'card_token_id', 'device_id', 'revision', 'request_id', 'terms'];
   if (Object.keys(data).some(key => !allowed.includes(key)) || !Number.isSafeInteger(data.revision) ||
     !/^[a-f0-9]{64}$/.test(data.request_id || '') || data.terms !== true) throw new InputError('Confira os dados e aceite os Termos de Serviço.');
   const payer = email(data.payer_email);
@@ -67,6 +68,7 @@ export async function cardCheckout(request, code, repository, options = {}) {
   if (!availableForCard(plan) || !env.MERCADOPAGO_PUBLIC_KEY?.trim() || !env.MERCADOPAGO_ACCESS_TOKEN?.trim()) throw new InputError('Plano temporariamente indisponível', 409);
   if (data.revision !== plan.revision) throw new InputError('As condições do plano mudaram. Recarregue a página e confira os valores.', 409);
   if (typeof data.card_token_id !== 'string' || !/^[a-zA-Z0-9_-]{16,256}$/.test(data.card_token_id)) throw new InputError('Informe um cartão válido para continuar.');
+  if (!validDeviceId(data.device_id)) throw new InputError(DEVICE_UNAVAILABLE);
   try { checkRemote(plan, await mpRequest('/preapproval_plan/' + encodeURIComponent(plan.mercadopago_plan_id), options)); }
   catch { throw new InputError('Plano temporariamente indisponível', 503); }
   const current = await plans.get(plan.id);
@@ -76,7 +78,7 @@ export async function cardCheckout(request, code, repository, options = {}) {
   }
   let remote;
   try {
-    remote = await mpRequest('/preapproval', { ...options, method: 'POST', body: {
+    remote = await mpRequest('/preapproval', { ...options, deviceId: data.device_id, method: 'POST', body: {
       preapproval_plan_id: plan.mercadopago_plan_id, payer_email: payer, card_token_id: data.card_token_id,
       external_reference: key, status: 'authorized', reason: 'Marquesano — ' + checkoutPlans[code].name,
       back_url: paymentSiteOrigin(env) + '/checkout/sucesso',
@@ -85,6 +87,7 @@ export async function cardCheckout(request, code, repository, options = {}) {
     // Only explicit provider rejection permits a new creation attempt.
     await checkout.state(key, error.definiteRejection ? 'rejected' : 'unknown');
     if (error.definiteRejection && error.cardValidationFailed) throw new InputError('O Mercado Pago não conseguiu validar este cartão. Confira os dados informados ou tente outro cartão.', 422);
+    if (error.definiteRejection && error.riskDeclined) throw new InputError(RISK_DECLINED, 422);
     if (error.definiteRejection) throw new InputError('Mercado Pago não autorizou a assinatura. Confira os dados do cartão ou use outro cartão. Se persistir, fale com o suporte.', 422);
     throw uncertain();
   }

@@ -1,23 +1,26 @@
 import { InputError } from './validation.mjs';
 import { paymentSiteOrigin } from './payment-origin.mjs';
 import { paymentDiagnostic } from './payment-diagnostics.mjs';
+import { validDeviceId, DEVICE_UNAVAILABLE } from '../../config/payment-security.mjs';
 
 function credentials(env) {
   if (!env.MERCADOPAGO_ACCESS_TOKEN?.trim()) throw new InputError('Configure MERCADOPAGO_ACCESS_TOKEN no servidor.', 503);
   return { token: env.MERCADOPAGO_ACCESS_TOKEN, origin: paymentSiteOrigin(env) };
 }
 
-export async function mpRequest(path, { env = process.env, fetcher = fetch, method = 'GET', body } = {}) {
+export async function mpRequest(path, { env = process.env, fetcher = fetch, method = 'GET', body, deviceId } = {}) {
   const { token } = credentials(env);
+  const diagnostic = path === '/preapproval' && method === 'POST';
+  if (deviceId !== undefined && !validDeviceId(deviceId)) throw new InputError(DEVICE_UNAVAILABLE);
+  const deviceHeader = diagnostic && deviceId ? { 'X-meli-session-id': deviceId } : {};
   let response;
   try {
-    response = await fetcher('https://api.mercadopago.com' + path, { method, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(15000), cache: 'no-store', redirect: 'error' });
+    response = await fetcher('https://api.mercadopago.com' + path, { method, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...deviceHeader }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(15000), cache: 'no-store', redirect: 'error' });
   } catch {throw new InputError('Mercado Pago não respondeu. Verifique o resultado antes de repetir a criação.', 502);}
-  const diagnostic = path === '/preapproval' && method === 'POST';
   let payload;
   if (diagnostic) {
     try { payload = await response.json(); } catch { payload = null; }
-    paymentDiagnostic(response, payload, { env, body });
+    paymentDiagnostic(response, payload, { env, body, deviceId });
   }
   if (!response.ok) {
     const error = new InputError(response.status === 401 || response.status === 403 ? 'Credencial do Mercado Pago inválida ou sem permissão.' : response.status === 404 ? 'Plano não encontrado no Mercado Pago.' : 'Mercado Pago não confirmou a operação. Confira os dados do plano.', 502);
@@ -25,6 +28,9 @@ export async function mpRequest(path, { env = process.env, fetcher = fetch, meth
     error.cardValidationFailed = diagnostic && [payload?.code, payload?.message, payload?.status_detail,
       ...(Array.isArray(payload?.cause) ? payload.cause.flatMap(c => [c?.code, c?.description, c?.message]) : [])]
       .some(value => typeof value === 'string' && /\bCC_VAL_433\b/.test(value));
+    error.riskDeclined = diagnostic && [payload?.code, payload?.message, payload?.status_detail,
+      ...(Array.isArray(payload?.cause) ? payload.cause.flatMap(c => [c?.code, c?.description, c?.message]) : [])]
+      .some(value => typeof value === 'string' && /high[_ -]?risk|rejected[_ -]fraud|fraud[_ -]risk/i.test(value));
     throw error;
   }
   try {if (diagnostic) {if (payload === null) throw Error(); return payload;} return await response.json();} catch {throw new InputError('Resposta inválida do Mercado Pago.', 502);}

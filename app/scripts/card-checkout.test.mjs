@@ -6,6 +6,25 @@ import { cardCheckout, attemptKey } from '../server/admin/card-checkout.mjs';
 
 const env = { MERCADOPAGO_SITE_ORIGIN: 'https://marquesano.com.br', ADMIN_SITE_ORIGIN: 'https://marquesano.com.br', MERCADOPAGO_ACCESS_TOKEN: 'mock-access', MERCADOPAGO_PUBLIC_KEY: 'mock-public' };
 const request = (body, origin = env.ADMIN_SITE_ORIGIN) => new Request(origin + '/api/checkout/basico', { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+test('missing or malformed device never reaches the provider', async t => {
+  const f = await fixture(t);
+  for (const device_id of [undefined, null, 123, '', 'bad\r\nheader', 'a'.repeat(1025), 'with spaces']) {
+    await assert.rejects(cardCheckout(request({ ...f.body(), device_id }), 'basico', f.repository, f.options), e => e.status === 400);
+  }
+  assert.equal(f.calls.length, 0);
+});
+
+test('risk rejection is friendly and never retried automatically', async t => {
+  const f = await fixture(t);
+  let posts = 0;
+  await assert.rejects(cardCheckout(request(f.body()), 'basico', f.repository, { ...f.options, fetcher: async (url, init) => {
+    if (init.method !== 'POST') return f.options.fetcher(url, init);
+    posts++;
+    return Response.json({ status_detail: 'cc_rejected_high_risk', message: 'high risk' }, { status: 400 });
+  } }), e => e.status === 422 && e.message === 'Não foi possível aprovar este pagamento. Confira seus dados ou tente outro cartão. Evite repetir várias tentativas em sequência.');
+  assert.equal(posts, 1);
+});
 async function fixture(t) {
   const { store, db } = await testStore();
   t.after(() => store.close());
@@ -30,7 +49,7 @@ async function fixture(t) {
     if (url.includes('/search?')) return { ok: true, json: async () => ({ results: resources }) };
     return { ok: true, json: async () => resources.find(r => url.endsWith('/' + r.id)) };
   } };
-  const body = (index = 0) => ({ revision: rows[index].revision, payer_email: 'buyer@example.test', card_token_id: 'official_card_token_test', terms: true, request_id: randomBytes(32).toString('hex') });
+  const body = (index = 0) => ({ revision: rows[index].revision, payer_email: 'buyer@example.test', card_token_id: 'official_card_token_test', device_id: 'device-session-fixture', terms: true, request_id: randomBytes(32).toString('hex') });
   return { repository, db, rows, calls, resources, options, body };
 }
 
@@ -53,12 +72,16 @@ test('Básico, Professional and Business authorize exactly their stored provider
     const sent = JSON.parse(f.calls.at(-1).body);
     assert.equal(sent.preapproval_plan_id, f.rows[i].mercadopago_plan_id);
     assert.equal(sent.status, 'authorized');
+    assert.equal(f.calls.at(-1).headers['X-meli-session-id'], data.device_id);
+    assert.equal(sent.device_id, undefined);
+    assert.equal(f.calls.at(-1).headers.Authorization, 'Bearer mock-access');
     assert.equal(sent.card_token_id, data.card_token_id);
     assert.equal(sent.external_reference, attemptKey(data.request_id));
     assert.equal(sent.transaction_amount, undefined);
     const record = await f.repository.checkout.get(attemptKey(data.request_id));
     assert.equal(record.amount_cents, f.rows[i].monthly_price_cents);
     assert.equal(record.state, 'authorized');
+    assert.equal(JSON.stringify(record).includes(data.device_id), false);
     assert.equal(JSON.stringify(record).includes(data.card_token_id), false);
   }
   const report = await f.repository.billing.report();
@@ -104,6 +127,8 @@ test('provider rejection is sanitized and allows retry with a new token/attempt'
   const fetcher = async (url, init) => init.method === 'POST' ? { ok: false, status: 400, json: async () => ({ message: 'secret' }) } : f.options.fetcher(url, init);
   await assert.rejects(cardCheckout(request(data), 'basico', f.repository, { env, fetcher }), e => e.status === 422 && !e.message.includes('secret'));
   assert.equal((await f.repository.checkout.get(attemptKey(data.request_id))).state, 'rejected');
+  await assert.rejects(cardCheckout(request(f.body()), 'basico', f.repository, f.options), e => e.status === 429);
+  await f.db.prepare("UPDATE public_limits SET expires=0 WHERE key LIKE 'card-checkout:%'").run();
   assert.equal((await cardCheckout(request(f.body()), 'basico', f.repository, f.options)).url, '/checkout/sucesso');
 });
 
