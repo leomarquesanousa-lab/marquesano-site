@@ -2,13 +2,13 @@ import StructuredData from "../../components/StructuredData";
 import { pageMetadata } from "../../config/metadata";
 import { getWhatsAppUrl } from "../../config/whatsapp";
 import { Form, Navigation } from "../../components/Experience";
-export const metadata = pageMetadata("/exemplos/servicos", "Serviços locais | Portfólio Marquesano", "Exemplo demonstrativo de site para prestadores de serviços no portfólio da Marquesano.");
+export const metadata = pageMetadata("/exemplos/servicos", "Site para prestadores de serviços: exemplo | Marquesano", "Veja um site demonstrativo para prestadores de serviços, com apresentação do atendimento e formulário de contato. Conheça os planos da Marquesano.");
 function Servicos() {
   return (
     <main className="bizPage serviceTheme">
       <div className="demoTop">
         <a href="/">← Voltar para Marquesano</a>
-        <span>DEMONSTRAÇÃO • SERVIÇOS</span>
+        <span>DEMONSTRAÇÃO • SERVIÇOS · <a href="/planos">Planos de sites profissionais</a></span>
       </div>
 
       <Navigation brand="ProntoFix" home="/exemplos/servicos" links={[["Início", "#inicio"], ["Serviços", "#servicos"], ["Vantagens", "#vantagens"], ["Contato", "#formulario"]]} action="#formulario" actionLabel="Pedir orçamento"/>

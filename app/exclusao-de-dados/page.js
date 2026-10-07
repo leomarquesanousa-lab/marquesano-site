@@ -1,3 +1,4 @@
+import StructuredData from "../components/StructuredData";
 import { Navigation } from "../components/Experience";
 import MainFooter from "../components/MainFooter";
 import { pageMetadata } from "../config/metadata";
@@ -18,6 +19,7 @@ export default function DataDeletionPage() {
   return <div className="commercialPage">
     <Navigation commercial/>
     <main>
+      <StructuredData path="/exclusao-de-dados" title={metadata.title} description={metadata.description}/>
       <header className={`commercialHero ${styles.hero}`}>
         <span className="eyebrow">MARQUESANO / SEUS DADOS</span>
         <h1>Exclusão de Dados</h1>

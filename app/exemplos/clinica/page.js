@@ -4,13 +4,13 @@ import { pageMetadata } from "../../config/metadata";
 
 import { Navigation, Form, Location } from "../../components/Experience";
 
-export const metadata = pageMetadata("/exemplos/clinica", "Clínica Aurora | Portfólio Marquesano", "Clínica Aurora: exemplo demonstrativo de site para saúde no portfólio da Marquesano.");
+export const metadata = pageMetadata("/exemplos/clinica", "Criação de site para clínica: exemplo | Marquesano", "Explore a Clínica Aurora, demonstração de site para clínica com especialidades, equipe e agendamento. Conheça os planos de criação de sites da Marquesano.");
 function Clinica() {
   return (
     <main className="clinic">
       <div className="demoNotice">
         <a href="/">← Voltar para Marquesano</a>
-        <span>CLÍNICA FICTÍCIA • DEMONSTRAÇÃO</span>
+        <span>CLÍNICA FICTÍCIA • DEMONSTRAÇÃO · <a href="/planos">Planos de sites profissionais</a></span>
       </div>
 
       <Navigation brand="aurora" home="/exemplos/clinica" links={[["Especialidades", "#especialidades"], ["A clínica", "#clinica"], ["Agenda", "#agenda"], ["Contato", "#contato"]]} action="#agenda" actionLabel="Agendar consulta"/>

@@ -1,0 +1,475 @@
+{
+  "pages": [
+    {
+      "path": "/",
+      "status": 200,
+      "title": "Criação de sites por assinatura para empresas | Marquesano",
+      "description": "Criação de sites profissionais para pequenas empresas no Brasil. Planos por assinatura com hospedagem, manutenção e suporte; domínio conforme o plano.",
+      "canonical": "https://marquesano.com.br",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "Service",
+        "FAQPage"
+      ]
+    },
+    {
+      "path": "/contato",
+      "status": 200,
+      "title": "Contato para criação de site profissional | Marquesano",
+      "description": "Fale com a Marquesano sobre a criação do site da sua empresa. Tire dúvidas sobre planos por assinatura, escopo, domínio, hospedagem e suporte.",
+      "canonical": "https://marquesano.com.br/contato",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/exclusao-de-dados",
+      "status": 200,
+      "title": "Exclusão de Dados | Marquesano",
+      "description": "Instruções para solicitar a exclusão de dados e revogar integrações vinculadas à Marquesano.",
+      "canonical": "https://marquesano.com.br/exclusao-de-dados",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/exemplos/barbearia",
+      "status": 200,
+      "title": "Site para barbearia: exemplo de design | Marquesano",
+      "description": "Navegue pelo site demonstrativo Black House, com serviços e agendamento para barbearia. Veja possibilidades para seu negócio e os planos Marquesano.",
+      "canonical": "https://marquesano.com.br/exemplos/barbearia",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/exemplos/clinica",
+      "status": 200,
+      "title": "Criação de site para clínica: exemplo | Marquesano",
+      "description": "Explore a Clínica Aurora, demonstração de site para clínica com especialidades, equipe e agendamento. Conheça os planos de criação de sites da Marquesano.",
+      "canonical": "https://marquesano.com.br/exemplos/clinica",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/exemplos/comercio",
+      "status": 200,
+      "title": "Criação de site para comércio: exemplo | Marquesano",
+      "description": "Explore Bosque Store, uma vitrine demonstrativa para comércio com catálogo de produtos. Veja possibilidades para seu site profissional com a Marquesano.",
+      "canonical": "https://marquesano.com.br/exemplos/comercio",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/exemplos/restaurante",
+      "status": 200,
+      "title": "Criação de site para restaurante: exemplo | Marquesano",
+      "description": "Conheça Casa Sapore, exemplo demonstrativo de site para restaurante com cardápio e reservas. Explore o projeto e os planos de sites por assinatura.",
+      "canonical": "https://marquesano.com.br/exemplos/restaurante",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/exemplos/restaurante/menu",
+      "status": 200,
+      "title": "Cardápio digital demonstrativo para restaurante | Marquesano",
+      "description": "Explore o cardápio digital fictício da Casa Sapore e veja como apresentar pratos em um site para restaurante. Exemplo do portfólio Marquesano.",
+      "canonical": "https://marquesano.com.br/exemplos/restaurante/menu",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/exemplos/servicos",
+      "status": 200,
+      "title": "Site para prestadores de serviços: exemplo | Marquesano",
+      "description": "Veja um site demonstrativo para prestadores de serviços, com apresentação do atendimento e formulário de contato. Conheça os planos da Marquesano.",
+      "canonical": "https://marquesano.com.br/exemplos/servicos",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/pets",
+      "status": 200,
+      "title": "Pets perdidos, encontrados e para adoção no Brasil | Pet Find",
+      "description": "Divulgue gratuitamente pets perdidos, encontrados e para adoção no Brasil. Compartilhe anúncios e ajude animais a reencontrar suas famílias.",
+      "canonical": "https://marquesano.com.br/pets",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "Organization",
+        "WebSite"
+      ]
+    },
+    {
+      "path": "/pets/adocao",
+      "status": 200,
+      "title": "Pets para adoção | Pet Find",
+      "description": "Conheça pets para adoção responsável no Brasil. Veja fotos e informações reais dos anúncios e converse com o responsável.",
+      "canonical": "https://marquesano.com.br/pets/adocao",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/pets/cidades/sp/sao-paullo",
+      "status": 200,
+      "title": "Pets em Sao paullo - SP | Pet Find",
+      "description": "Encontre pets perdidos, encontrados e para adoção em Sao paullo - SP. Consulte anúncios com fotos e localização aproximada e ajude na sua região.",
+      "canonical": "https://marquesano.com.br/pets/cidades/sp/sao-paullo",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/pets/guias",
+      "status": 200,
+      "title": "Guias para encontrar pets perdidos e adotar | Pet Find",
+      "description": "Orientações para procurar um pet perdido, ajudar animais encontrados e realizar uma adoção responsável. Guias gratuitos do Pet Find.",
+      "canonical": "https://marquesano.com.br/pets/guias",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/pets/guias/adocao-responsavel",
+      "status": 200,
+      "title": "Adoção responsável: um novo começo | Pet Find",
+      "description": "Uma decisão com carinho, planejamento e compromisso por toda a vida.",
+      "canonical": "https://marquesano.com.br/pets/guias/adocao-responsavel",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList",
+        "Article"
+      ]
+    },
+    {
+      "path": "/pets/guias/encontrei-um-pet-como-ajudar",
+      "status": 200,
+      "title": "Encontrei um pet: como ajudar com cuidado | Pet Find",
+      "description": "Saiba como divulgar um animal encontrado e buscar sua família com segurança.",
+      "canonical": "https://marquesano.com.br/pets/guias/encontrei-um-pet-como-ajudar",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList",
+        "Article"
+      ]
+    },
+    {
+      "path": "/pets/guias/meu-pet-sumiu-o-que-fazer",
+      "status": 200,
+      "title": "Meu pet sumiu. Por onde começar? | Pet Find",
+      "description": "Um plano prático para organizar a busca, avisar a vizinhança e compartilhar as informações certas.",
+      "canonical": "https://marquesano.com.br/pets/guias/meu-pet-sumiu-o-que-fazer",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList",
+        "Article"
+      ]
+    },
+    {
+      "path": "/pets/pet/ave-cinza-6f98838d",
+      "status": 200,
+      "title": "Ave perdida em Sao paullo - SP | Pet Find",
+      "description": "Ave perdida em Sao paullo - SP. Nome: pALO. Raça: Mestiço. Bairro: Cambuci. tetetetetetetete ter ett e tert er tert etre tre t er er re er ter re er",
+      "canonical": "https://marquesano.com.br/pets/pet/ave-cinza-6f98838d",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage"
+      ]
+    },
+    {
+      "path": "/pets/pets-encontrados",
+      "status": 200,
+      "title": "Pets encontrados | Pet Find",
+      "description": "Consulte anúncios de animais encontrados no Brasil e ajude a localizar seus responsáveis. Busque por espécie, cidade e bairro.",
+      "canonical": "https://marquesano.com.br/pets/pets-encontrados",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/pets/pets-perdidos",
+      "status": 200,
+      "title": "Pets perdidos | Pet Find",
+      "description": "Encontre anúncios de pets perdidos no Brasil. Consulte fotos, características e localização aproximada para ajudar nas buscas.",
+      "canonical": "https://marquesano.com.br/pets/pets-perdidos",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/pets/pets-perdidos/aves",
+      "status": 200,
+      "title": "Pets perdidos — Aves | Pet Find",
+      "description": "Pets perdidos — Aves. Encontre anúncios de pets perdidos no Brasil. Consulte fotos, características e localização aproximada para ajudar nas buscas.",
+      "canonical": "https://marquesano.com.br/pets/pets-perdidos/aves",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/pets/pets-perdidos/cidade/sp/sao-paullo",
+      "status": 200,
+      "title": "Pets perdidos em Sao paullo · SP | Pet Find",
+      "description": "Pets perdidos em Sao paullo · SP. Encontre anúncios de pets perdidos no Brasil. Consulte fotos, características e localização aproximada para ajudar nas buscas.",
+      "canonical": "https://marquesano.com.br/pets/pets-perdidos/cidade/sp/sao-paullo",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/pets/privacidade",
+      "status": 200,
+      "title": "Política de privacidade | Pet Find",
+      "description": "Saiba como o Pet Find trata dados de contas, fotos e contatos públicos, cookies e o controle dos seus anúncios de pets.",
+      "canonical": "https://marquesano.com.br/pets/privacidade",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/pets/reencontrados",
+      "status": 200,
+      "title": "Histórias de reencontro | Pet Find",
+      "description": "Laços que se encontraram outra vez. Cada reencontro importa.",
+      "canonical": "https://marquesano.com.br/pets/reencontrados",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/pets/termos",
+      "status": 200,
+      "title": "Termos de uso | Pet Find",
+      "description": "Conheça as regras de publicação gratuita, responsabilidade pelos anúncios, moderação e contatos no portal Pet Find.",
+      "canonical": "https://marquesano.com.br/pets/termos",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/planos",
+      "status": 200,
+      "title": "Planos de site por assinatura | Marquesano",
+      "description": "Compare planos de criação de site por assinatura com hospedagem e suporte. Confira preços, domínio, escopo e quantidade de cobranças antes de contratar.",
+      "canonical": "https://marquesano.com.br/planos",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/politica-de-privacidade",
+      "status": 200,
+      "title": "Política de Privacidade | Marquesano",
+      "description": "Saiba como a Marquesano coleta, utiliza e protege informações, como funcionam as integrações autorizadas e como solicitar a exclusão dos seus dados.",
+      "canonical": "https://marquesano.com.br/politica-de-privacidade",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/portfolio",
+      "status": 200,
+      "title": "Portfólio de sites profissionais por segmento | Marquesano",
+      "description": "Explore sites demonstrativos para clínica, restaurante, barbearia e comércio. Conheça possibilidades de design para o site profissional do seu negócio.",
+      "canonical": "https://marquesano.com.br/portfolio",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/servicos",
+      "status": 200,
+      "title": "Criação e manutenção de sites profissionais | Marquesano",
+      "description": "Desenvolvimento de sites para pequenas empresas no Brasil, com design responsivo, hospedagem, manutenção e suporte conforme o plano contratado.",
+      "canonical": "https://marquesano.com.br/servicos",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList",
+        "Service"
+      ]
+    },
+    {
+      "path": "/sobre",
+      "status": 200,
+      "title": "Sobre a Marquesano: sites para pequenas empresas",
+      "description": "Conheça a Marquesano e sua proposta de criação de sites profissionais por assinatura para pequenas empresas, com design e acompanhamento contínuo.",
+      "canonical": "https://marquesano.com.br/sobre",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    },
+    {
+      "path": "/termos-de-servico",
+      "status": 200,
+      "title": "Termos de Serviço | Marquesano",
+      "description": "Termos aplicáveis ao uso do site, serviços digitais e integrações oferecidas pela Marquesano.",
+      "canonical": "https://marquesano.com.br/termos-de-servico",
+      "robots": "index, follow",
+      "h1": 1,
+      "missingAlt": 0,
+      "schemas": [
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "BreadcrumbList"
+      ]
+    }
+  ],
+  "sitemapUrls": 30,
+  "checkedLinks": 52,
+  "brokenLinks": [],
+  "missingPages": [
+    {
+      "path": "/pets/pet/anuncio-inexistente-auditoria",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/pets/guias/guia-inexistente-auditoria",
+      "status": 200,
+      "noindex": true
+    }
+  ],
+  "failures": []
+}

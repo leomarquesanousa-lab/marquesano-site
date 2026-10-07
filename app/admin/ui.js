@@ -47,7 +47,7 @@ export function AdminShell({ user, links, children }) {
     <a className={styles.skip} href="#admin-main">Pular para o conteúdo</a>
     <aside className={`${styles.sidebar} ${open ? styles.open : ''}`} id="admin-navigation">
       <span className={styles.brand}>Marquesano <b>Admin</b></span>
-      <nav aria-label="Menu administrativo">{links.map(link => <a key={link.href} href={link.href} aria-current={pathname === link.href ? 'page' : undefined} onClick={() => setOpen(false)}><Icon name={({dashboard:'chart',analytics:'pulse',marketing:'ads',seo:'globe',configuracoes:'settings',usuarios:'users',auditoria:'audit'})[link.href.split('/').pop()]}/>{link.title}</a>)}</nav>
+      <nav aria-label="Menu administrativo">{links.map(link => <a key={link.href} href={link.href} aria-current={pathname === link.href ? 'page' : undefined} onClick={() => setOpen(false)}><Icon name={({pets:'users',dashboard:'chart',analytics:'pulse',marketing:'ads',seo:'globe',configuracoes:'settings',usuarios:'users',auditoria:'audit'})[link.href.split('/').pop()]}/>{link.title}</a>)}</nav>
       <small>Ambiente privado</small>
     </aside>
     <div className={styles.workspace}>

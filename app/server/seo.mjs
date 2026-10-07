@@ -1,12 +1,13 @@
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-export const officialSite='https://marquesano.com.br';
+import { siteUrl } from '../config/site.mjs';
+export const officialSite=siteUrl;
 const projectRoot=()=>existsSync(join(process.cwd(),'package.json'))?process.cwd():dirname(process.cwd());
 export function publicPages(root=join(projectRoot(),'app')) {
   const pages=[];
   function walk(dir,parts=[]) {
     for(const entry of readdirSync(dir,{withFileTypes:true})) {
-      if(entry.isDirectory()&&!['admin','api','node_modules'].includes(entry.name)&&!entry.name.startsWith('.')&&!entry.name.startsWith('[')&&!entry.name.startsWith('_')&&!entry.name.startsWith('@'))walk(join(dir,entry.name),entry.name.startsWith('(')?parts:[...parts,entry.name]);
+      if(entry.isDirectory()&&!['admin','administracao','api','node_modules','checkout','assinar','assinatura'].includes(entry.name)&&!entry.name.startsWith('.')&&!entry.name.startsWith('[')&&!entry.name.startsWith('_')&&!entry.name.startsWith('@'))walk(join(dir,entry.name),entry.name.startsWith('(')?parts:[...parts,entry.name]);
       else if(entry.isFile()&&/^page\.(js|jsx|ts|tsx)$/.test(entry.name)) {
         const source=readFileSync(join(dir,entry.name),'utf8');const path='/'+parts.join('/');
         const indexable=!/index\s*:\s*false/.test(source);

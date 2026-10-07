@@ -14,6 +14,7 @@ async function diagnosticStage(stage, operation) {
 }
 export const roles = ['OWNER', 'ADMIN', 'MARKETING', 'SALES', 'VIEWER'];
 export const modules = {
+  pets: { title: 'Pets', description: 'Anúncios e acompanhamento do portal de pets.', roles: ['OWNER','ADMIN'] },
   'meta-ads': { title: 'Meta Ads', description: 'Campanhas, criativos e resultados da Meta.', roles: ['OWNER','ADMIN'] },
   vendas: { title: 'Vendas', description: 'Assinaturas, recebimentos e próximos vencimentos.', roles: ['OWNER','ADMIN'] },
   dashboard: { title: 'Dashboard', description: 'Visão geral do ambiente administrativo.', roles },
@@ -78,6 +79,7 @@ export async function createAdminStore(connectionString, now = Date.now, depende
   function transaction(fn) {return db.transaction(fn);}
   return {
     repository,
+    database: db,
     close: () => db.close(),
     async ensureInitialOwner(env = process.env) {
       return await transaction(async () => {
@@ -133,23 +135,42 @@ export async function createAdminStore(connectionString, now = Date.now, depende
 }
 
 const storeKey = Symbol.for('marquesano.admin.postgres.store');
+async function initializeAdminStore() {
+  const store = await createAdminStore(process.env.DATABASE_URL);
+  try { await store.ensureInitialOwner(); }
+  catch (error) {
+    adminDiagnostic('ADMIN_OWNER_PROVISION_FAILED', error);
+    try { await store.close(); } catch (closeError) { adminDiagnostic('ADMIN_POSTGRES_CLOSE_FAILED', closeError); }
+    throw error;
+  }
+  return store;
+}
 export async function adminStore() {
   if (!configured()) throw Error('Configuração administrativa inválida.');
   if (!globalThis[storeKey]) {
-    globalThis[storeKey] = (async () => {
-      const store = await createAdminStore(process.env.DATABASE_URL);
-      try { await store.ensureInitialOwner(); }
-      catch (error) {
-        adminDiagnostic('ADMIN_OWNER_PROVISION_FAILED', error);
-        try { await store.close(); } catch (closeError) { adminDiagnostic('ADMIN_POSTGRES_CLOSE_FAILED', closeError); }
-        throw error;
-      }
-      return store;
-    })();
+    globalThis[storeKey] = initializeAdminStore();
   }
+  const cached = globalThis[storeKey];
+  let active = cached;
   try {
-    const store = await globalThis[storeKey];
+    let store = await cached;
+    // Development reloads can retain a store created with an older contract.
+    // Close its pool before rebuilding; concurrent callers await the same replacement.
+    if (!store?.database || typeof store.database.query !== 'function' || typeof store.database.transaction !== 'function') {
+      if (globalThis[storeKey] === cached) {
+        globalThis[storeKey] = (async () => {
+          if (typeof store?.close !== 'function') throw Error('Store PostgreSQL incompatível: reinicie o processo para renovar a conexão compartilhada.');
+          await store.close();
+          return initializeAdminStore();
+        })();
+      }
+      active = globalThis[storeKey];
+      store = await active;
+    }
     adminDiagnostic('ADMIN_STORE_READY');
     return store;
-  } catch(error) { delete globalThis[storeKey]; throw error; }
+  } catch(error) { if (globalThis[storeKey] === active) delete globalThis[storeKey]; throw error; }
 }
+
+// Official access to the adapter owned by the shared administrative store.
+export async function adminDatabase() { return (await adminStore()).database; }

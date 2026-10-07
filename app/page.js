@@ -1,14 +1,18 @@
+import Image from "next/image";
 import PlanCards from "./components/PlanCards";
 import { publicPlans } from "./server/plans";
-import { priceLabel } from "./config/plans.mjs";
 export const dynamic = "force-dynamic";
 import StructuredData from "./components/StructuredData";
+import { homeFaq } from "./config/faq.mjs";
 import { pageMetadata } from "./config/metadata";
 export const metadata = pageMetadata("/");
 
 import { Navigation, Footer } from "./components/Experience";
 import ContactForm from "./components/ContactForm";
 import QuarterlyReview from "./components/QuarterlyReview";
+import PetsPromotion from "./components/PetsPromotion";
+import HomeBannerCarousel from "./components/HomeBannerCarousel";
+import { priceLabel } from "./config/plans.mjs";
 
 const Icon = ({ name, size = 22 }) => {
   const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" };
@@ -88,8 +92,9 @@ async function Home() {
     <main className="home">
       <Navigation commercial />
 
+      <HomeBannerCarousel commercial={
       <section className="heroV9">
-        <div className="heroV9Image" />
+        <div className="heroV9Image" style={{backgroundImage:"none"}}><Image src="/images/hero-tech.png" alt="" fill sizes="100vw" preload style={{objectFit:"cover",objectPosition:"inherit"}} /></div>
         <div className="heroV9Overlay" />
 
         <div className="heroV9Inner">
@@ -130,6 +135,7 @@ async function Home() {
           </div>
         </div>
       </section>
+      } pets={<PetsPromotion />} />
 
       <section className="serviceStripV12">
         <div className="serviceRail">
@@ -189,7 +195,7 @@ async function Home() {
           {examples.map((item) =>
           <a className="portfolioV12Card" href={item.href} key={item.title}>
               <div className="portfolioV12Image">
-                <img src={item.image} alt={item.title} />
+                <img src={item.image+"&auto=compress&w=900"} alt={item.title+" — exemplo de site profissional"} loading="lazy" decoding="async" width="900" height="600" />
                 <span className="portfolioV12Tag">{item.tag}</span>
               </div>
               <div className="portfolioV12Info">
@@ -220,7 +226,7 @@ async function Home() {
           <div className="matchMosaicV12">
             {mosaic.map(([img, label]) =>
             <div className="mosaicCardV12" key={label}>
-                <img src={img} alt={label} />
+                <img src={img+"&auto=compress&w=600"} alt={label+" — segmento atendido"} loading="lazy" decoding="async" width="600" height="400" />
                 <span>{label}</span>
               </div>
             )}
@@ -249,11 +255,7 @@ async function Home() {
         </div>
 
         <div className="faqList">
-          <details><summary>Como funciona a revisão trimestral?<span>+</span></summary><p>Nos planos que incluem esse benefício, você tem direito a uma revisão do site com consultoria agendada a cada 3 meses. Podemos avaliar visual, conteúdo, links, botões, formulários e experiência em celular, além de sugerir melhorias para gerar contatos e pequenas recomendações de SEO. O escopo e os ajustes seguem o plano contratado; não se trata de consultoria ilimitada.</p></details>
-          <details><summary>Tem taxa de criação?<span>+</span></summary><p>Não. A criação está incluída no serviço mensal.</p></details>
-          <details><summary>Qual é a duração do plano?<span>+</span></summary><p>O número de cobranças mensais está indicado em cada plano e pode ser conferido antes da contratação.</p></details>
-          <details><summary>Posso cancelar antes?<span>+</span></summary><p>Sim, conforme as condições contratuais e eventual cobrança proporcional do benefício inicial concedido.</p></details>
-          <details><summary>O domínio está incluído?<span>+</span></summary><p>Um domínio básico .com.br pode ser incluído, sujeito à disponibilidade e às regras do plano.</p></details>
+          {homeFaq.map(({question,answer}) => <details key={question}><summary>{question}<span>+</span></summary><p>{answer}</p></details>)}
         </div>
       </section>
 
@@ -267,8 +269,8 @@ async function Home() {
 
         <div className="finalCtaPortrait">
           <img
-            src="https://images.pexels.com/photos/3760263/pexels-photo-3760263.jpeg?cs=srgb&dl=pexels-olly-3760263.jpg&fm=jpg"
-            alt="Profissional atendendo cliente" />
+            src="https://images.pexels.com/photos/3760263/pexels-photo-3760263.jpeg?cs=srgb&dl=pexels-olly-3760263.jpg&fm=jpg&auto=compress&w=800"
+            alt="Profissional atendendo cliente" loading="lazy" decoding="async" width="600" height="800" />
 
         </div>
       </section>
@@ -279,4 +281,4 @@ async function Home() {
 
 }
 
-export default function PageWithSEO(props) {return <><StructuredData path="/" title={metadata.title} description={metadata.description} service={false} /><Home {...props} /></>;}
+export default function PageWithSEO(props) {return <><StructuredData path="/" title={metadata.title} description={metadata.description} service={true} faq={homeFaq} /><Home {...props} /></>;}

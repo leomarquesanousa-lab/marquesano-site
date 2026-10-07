@@ -20,7 +20,7 @@ export function Navigation({ brand = "Marquesano", home = "/", links, action = "
   </header>;
 }
 
-export function DemoBar({ name }) { return <div className="demoBar"><a href="/portfolio">← Voltar ao portfólio</a><span>{name} · Negócio fictício / demonstração</span></div>; }
+export function DemoBar({ name }) { return <div className="demoBar"><a href="/portfolio">← Voltar ao portfólio</a><span>{name} · Negócio fictício / demonstração · <a href="/planos">Planos de sites profissionais</a></span></div>; }
 
 export function Photo({ id, alt, className = "", eager = false, sizes = "(max-width: 760px) 100vw, 50vw" }) {
   const source = `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb`;

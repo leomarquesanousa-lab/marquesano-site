@@ -557,6 +557,7 @@ img{display:block;max-width:100%}
   background-image:url("/images/hero-tech.png");
   background-size:cover;
   background-position:center;
+  object-position:center;
   background-repeat:no-repeat;
 }
 .heroV9Overlay{
@@ -644,6 +645,7 @@ img{display:block;max-width:100%}
   }
   .heroV9Image{
     background-position:64% center;
+    object-position:64% center;
   }
   .heroV9Overlay{
     background:
@@ -672,6 +674,7 @@ img{display:block;max-width:100%}
   }
   .heroV9Image{
     background-position:70% center;
+    object-position:70% center;
   }
   .heroV9Overlay{
     background:linear-gradient(180deg,

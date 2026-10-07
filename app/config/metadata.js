@@ -1,6 +1,7 @@
-export const siteUrl = "https://marquesano.com.br";
-export const siteTitle = "Marquesano | Sites Profissionais para Empresas";
-export const siteDescription = "Criamos sites modernos, rápidos e responsivos para empresas que querem fortalecer sua presença digital e conquistar mais clientes.";
+import { siteUrl } from './site.mjs';
+export { siteUrl };
+export const siteTitle = "Criação de sites por assinatura para empresas | Marquesano";
+export const siteDescription = "Criação de sites profissionais para pequenas empresas no Brasil. Planos por assinatura com hospedagem, manutenção e suporte; domínio conforme o plano.";
 export const socialDescription = "Sites modernos, rápidos e responsivos para sua empresa crescer no digital.";
 export const socialImage = {
   url: `${siteUrl}/og-image.jpg`, width: 1200, height: 630, type: "image/jpeg",
@@ -11,7 +12,7 @@ export function pageMetadata(path, title = siteTitle, description = siteDescript
   const url = path === "/" ? siteUrl : `${siteUrl}${path}`;
   const previewDescription = path === "/" ? socialDescription : description;
   return {
-    title, description,
+    title, description, robots: { index: true, follow: true },
     alternates: { canonical: url },
     openGraph: {
       type: "website", locale: "pt_BR", url, siteName: "Marquesano",

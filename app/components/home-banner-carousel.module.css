@@ -1,0 +1,13 @@
+.carousel{position:relative;background:#08111d}
+.slides{display:grid}
+.slide{grid-area:1/1;min-width:0;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .7s ease,visibility 0s .7s}
+.active{opacity:1;visibility:visible;pointer-events:auto;z-index:1;transition:opacity .7s ease,visibility 0s}
+.slide>section{height:100%}
+.controls{position:absolute;z-index:3;bottom:12px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:2px 8px;border-radius:24px;background:rgba(8,17,29,.78);color:#fff}
+.controls button{display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:50%;background:transparent;color:inherit;font-size:22px;cursor:pointer}
+.controls button:last-child{font-size:14px}
+.controls button:hover{background:rgba(255,255,255,.16)}
+.controls button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.indicator span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45);transition:width .2s,background .2s}
+.indicator[aria-current=true] span{width:19px;border-radius:8px;background:#fff}
+@media(prefers-reduced-motion:reduce){.slide,.active,.indicator span{transition:none}}

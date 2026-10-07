@@ -1,0 +1,10 @@
+'use client';
+import {useState} from 'react';
+import {useRouter} from 'next/navigation';
+import Link from 'next/link';
+export function Logout({admin=false}){const router=useRouter();const [error,setError]=useState('');return <><button className="button secondary small" onClick={async()=>{try{const r=await fetch(admin?'/api/admin/logout':'/api/portal/logout',{method:'POST'});if(!r.ok)throw Error('Não foi possível sair.');router.refresh();}catch(e){setError(e.message);}}}>Sair da conta</button>{error&&<span role="alert">{error}</span>}</>;}
+export function PetActions({pet}){
+ const [busy,setBusy]=useState(false),[error,setError]=useState(''),[confirmDelete,setConfirmDelete]=useState(false);const router=useRouter();
+ async function action(type,status){setBusy(true);setError('');try{const res=await fetch(`/api/portal/listings/${pet.id}/${type}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});const data=await res.json();if(!res.ok)throw Error(data.error);router.refresh();}catch(error){setError(error.message);}finally{setBusy(false);}}
+ return <><div className="account-pet-actions"><Link href={'/pets/pet/'+pet.slug} className="button secondary">Ver anúncio</Link><Link href={'/pets/minha-conta/anuncios/'+pet.id+'/editar'} className="button secondary">Editar e atualizar fotos</Link>{pet.status==='ativo'&&<><button className="button secondary" disabled={busy} onClick={()=>action('status',pet.situation==='adocao'?'adotado':'reencontrado')}>{pet.situation==='adocao'?'Marcar adotado':'Marcar reencontrado'}</button><button className="button secondary" disabled={busy} onClick={()=>action('status','resolvido')}>Marcar resolvido</button></>}{confirmDelete?<><button className="button danger" disabled={busy} onClick={()=>action('delete')}>Confirmar exclusão</button><button className="button secondary" onClick={()=>setConfirmDelete(false)}>Cancelar</button></>:<button className="button secondary" onClick={()=>setConfirmDelete(true)}>Excluir</button>}</div>{confirmDelete&&<p>O anúncio e as fotos serão excluídos permanentemente.</p>}{error&&<p className="error-message" role="alert">{error}</p>}</>;
+}
