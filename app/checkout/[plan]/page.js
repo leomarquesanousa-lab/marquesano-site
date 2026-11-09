@@ -1,4 +1,5 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { commercialCheckoutAllowed } from '../../config/commercial-checkout.mjs';
 import { checkoutStore } from '../../server/checkout.mjs';
 import { checkoutPlans } from '../../config/checkout-plans.mjs';
 import { planFeatures, priceLabel } from '../../config/plans.mjs';
@@ -19,6 +20,7 @@ export default async function CheckoutPage({ params }) {
   catch (error) {
     if (process.env.NODE_ENV === 'development') console.info('CHECKOUT_LOCAL_DATABASE', { stage: 'CATALOG_READ_FAILED', name: ['Error','TypeError'].includes(error.name) ? error.name : 'DatabaseError', code: /^[A-Z0-9_]{2,40}$/.test(error.code || '') ? error.code : undefined });
   }
+  if (!commercialCheckoutAllowed(plan, definition.storedId)) redirect('/contato');
   const diagnostics = process.env.NODE_ENV === 'development';
   if (diagnostics) console.info('CHECKOUT_LOCAL_PLAN', { plan_code_received: code, plan_found: Boolean(plan), price_found: Number.isSafeInteger(plan?.monthly_price_cents) && plan.monthly_price_cents > 0, mercado_pago_public_key_available: Boolean(process.env.MERCADOPAGO_PUBLIC_KEY?.trim()) });
   return <main className={styles.shell}><Navigation commercial />

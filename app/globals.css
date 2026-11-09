@@ -1132,71 +1132,6 @@ img{display:block;max-width:100%}
 .mechanismCard h3{font-size:20px;letter-spacing:-.03em;margin:0 0 10px}
 .mechanismCard p{font-size:13px;line-height:1.6;color:rgba(255,255,255,.62);margin:0}
 
-/* refined examples */
-.portfolioCleanV12{padding:96px 5.5vw;background:#fff}
-.portfolioV12Head{
-  max-width:1180px;margin:0 auto 40px;
-  display:grid;grid-template-columns:1fr .74fr;gap:7vw;align-items:end
-}
-.portfolioV12Head h2{
-  font-size:clamp(40px,4.35vw,58px);line-height:1.04;letter-spacing:-.055em;margin:13px 0 0
-}
-.portfolioV12Head p{margin:0;color:#697587;font-size:16px;line-height:1.68}
-.portfolioV12Grid{
-  max-width:1180px;margin:0 auto;
-  display:grid;grid-template-columns:repeat(2,1fr);gap:20px
-}
-.portfolioV12Card{
-  border:1px solid #e6eaf0;border-radius:24px;overflow:hidden;background:#fff;
-  box-shadow:0 18px 48px rgba(18,30,50,.045);transition:.22s ease
-}
-.portfolioV12Card:hover{transform:translateY(-4px);box-shadow:0 26px 64px rgba(18,30,50,.085)}
-.portfolioV12Image{height:270px;position:relative;overflow:hidden}
-.portfolioV12Image img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
-.portfolioV12Card:hover img{transform:scale(1.025)}
-.portfolioV12Image:after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(9,18,30,.25),transparent 58%)}
-.portfolioV12Tag{
-  position:absolute;left:16px;top:16px;z-index:2;
-  padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.92);
-  font-size:9px;font-weight:950;letter-spacing:.1em;color:#202b3b
-}
-.portfolioV12Info{padding:20px 22px 22px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.portfolioV12Info h3{font-size:23px;letter-spacing:-.04em;margin:0 0 5px}
-.portfolioV12Info p{font-size:13px;color:#6b7686;margin:0}
-.portfolioV12Arrow{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#f0f3f7;color:#1d2735;flex:0 0 42px}
-
-/* match section with depth */
-.matchSectionV12{
-  position:relative;margin:0 3vw;border-radius:34px;overflow:hidden;color:#fff;background:#0c1727
-}
-.matchTechBg{
-  position:absolute;inset:0;
-  background-image:url("/images/hero-tech.png");
-  background-size:cover;background-position:center;
-  filter:blur(1px) saturate(.65);
-  transform:scale(1.02);
-  opacity:.40;
-}
-.matchShade{
-  position:absolute;inset:0;
-  background:
-    linear-gradient(90deg,rgba(8,18,31,.96),rgba(8,18,31,.83) 52%,rgba(8,18,31,.72)),
-    radial-gradient(circle at 78% 25%,rgba(89,107,220,.18),transparent 20%);
-}
-.matchInnerV12{
-  position:relative;z-index:2;padding:64px 4.6vw;
-  display:grid;grid-template-columns:.85fr 1.15fr;gap:50px;align-items:center
-}
-.matchCopyV12 h2{
-  font-size:clamp(38px,4.15vw,56px);line-height:1.04;letter-spacing:-.055em;margin:14px 0 18px
-}
-.matchCopyV12 p{font-size:16px;line-height:1.7;color:rgba(255,255,255,.66);max-width:520px}
-.matchMosaicV12{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}
-.mosaicCardV12{height:205px;border-radius:20px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.12)}
-.mosaicCardV12 img{width:100%;height:100%;object-fit:cover}
-.mosaicCardV12:after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(7,15,26,.58),transparent 60%)}
-.mosaicCardV12 span{position:absolute;z-index:2;left:14px;bottom:13px;font-size:13px;font-weight:850}
-
 /* final CTA with person behind WhatsApp */
 .finalCtaV12{
   margin:92px 3vw 3vw;border-radius:32px;overflow:hidden;
@@ -1318,11 +1253,8 @@ img{display:block;max-width:100%}
   .mechanismGrid{grid-template-columns:repeat(2,1fr)}
   .finalCtaV12{grid-template-columns:1fr}
   .finalCtaPortrait{height:320px}
-  .matchInnerV12{grid-template-columns:1fr}
 }
 @media(max-width:980px){
-  .portfolioV12Head{grid-template-columns:1fr}
-  .portfolioV12Grid{grid-template-columns:1fr}
   .clinicAgendaV12,.bookingSection{grid-template-columns:1fr}
   .menuHead,.commerceHead{align-items:flex-start;flex-direction:column}
   .menuList,.commerceGrid{grid-template-columns:1fr 1fr}
@@ -1335,11 +1267,6 @@ img{display:block;max-width:100%}
   .mechanismSection{margin:68px 14px 0}
   .mechanismInner{padding:46px 24px}
   .mechanismGrid{grid-template-columns:1fr}
-  .portfolioCleanV12{padding:76px 20px}
-  .portfolioV12Image{height:230px}
-  .matchSectionV12{margin:0 14px}
-  .matchInnerV12{padding:46px 24px}
-  .mosaicCardV12{height:145px}
   .finalCtaV12{margin:74px 14px 14px}
   .finalCtaTextV12{padding:46px 24px}
   .clinicAgendaV12,.bookingSection,.restaurantMenu,.commerceProducts{padding:72px 20px}

@@ -1,3 +1,4 @@
+import { commercialCheckoutAllowed } from '../../config/commercial-checkout.mjs';
 import { checkoutPlans } from '../../config/checkout-plans.mjs';
 import { startCheckout } from './mercadopago.mjs';
 import { InputError, isInputError, readJson } from './validation.mjs';
@@ -13,6 +14,7 @@ export async function directCheckout(request, code, plans, options = {}) {
   }
   const id = checkoutPlans[code].storedId;
   const plan = await plans.get(id);
+  if (!commercialCheckoutAllowed(plan, id)) return { url: '/contato' };
   if (!plan.active || !Number.isSafeInteger(plan.monthly_price_cents) || plan.monthly_price_cents <= 0 ||
   !Number.isInteger(plan.cycles) || plan.cycles < 1 || plan.cycles > 1200 ||
   !plan.mercadopago_plan_id || plan.sync_state !== 'synced' || plan.synced_revision !== plan.revision) {

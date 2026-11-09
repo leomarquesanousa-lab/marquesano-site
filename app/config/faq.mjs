@@ -17,6 +17,6 @@ export const homeFaq = [
   },
   {
     "question": "O domínio está incluído?",
-    "answer": "Um domínio básico .com.br pode ser incluído, sujeito à disponibilidade e às regras do plano."
+    "answer": "O domínio .com.br está incluso, sujeito à disponibilidade. Outras extensões não estão incluídas."
   }
 ];

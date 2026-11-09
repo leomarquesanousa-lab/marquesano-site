@@ -1,3 +1,4 @@
+import { commercialCheckoutAllowed } from '../../config/commercial-checkout.mjs';
 import { InputError } from './validation.mjs';
 import { paymentSiteOrigin } from './payment-origin.mjs';
 import { paymentDiagnostic } from './payment-diagnostics.mjs';
@@ -68,11 +69,12 @@ export async function syncPlan(plans, id, options = {}) {
 
 export async function startCheckout(plans, id, revision, options = {}) {
   const p = await plans.get(id);
+  if (!commercialCheckoutAllowed(p, id)) throw new InputError('Consulte o atendimento comercial para contratar este plano.', 409);
   if (!p.active || !p.monthly_price_cents || !p.mercadopago_plan_id || p.sync_state !== 'synced' || p.synced_revision !== p.revision) throw new InputError('Este plano ainda não está disponível para contratação.', 409);
   if (revision !== p.revision) throw new InputError('As condições do plano mudaram. Recarregue a página e confira os valores.', 409);
   const remote = await mpRequest('/preapproval_plan/' + encodeURIComponent(p.mercadopago_plan_id), options);
   checkRemote(p, remote);
   const current = await plans.get(id);
-  if (current.revision !== p.revision || current.sync_state !== 'synced') throw new InputError('O plano está sendo atualizado. Tente novamente.', 409);
+  if (!commercialCheckoutAllowed(current, id) || current.revision !== p.revision || current.sync_state !== 'synced') throw new InputError('O plano está sendo atualizado. Tente novamente.', 409);
   return checkoutUrl(remote);
 }

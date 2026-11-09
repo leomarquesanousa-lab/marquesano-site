@@ -12,6 +12,7 @@ import ContactForm from "./components/ContactForm";
 import QuarterlyReview from "./components/QuarterlyReview";
 import PetsPromotion from "./components/PetsPromotion";
 import HomeBannerCarousel from "./components/HomeBannerCarousel";
+import { commercialPlans } from "./config/commercial-plans.mjs";
 import { priceLabel } from "./config/plans.mjs";
 
 const Icon = ({ name, size = 22 }) => {
@@ -41,48 +42,10 @@ const stripItems = [
 
 
 const engineItems = [
-["spark", "Design profissional", "Identidade visual, composição e acabamento pensados para o segmento do cliente."],
+["spark", "Design profissional", "Composição e acabamento do site a partir da identidade visual e dos materiais fornecidos pelo cliente."],
 ["gear", "Tudo incluído", "Domínio, hospedagem, SSL, manutenção e suporte trabalhando como uma única solução."],
 ["mobile", "Pronto para celular", "Experiência confortável e responsiva em qualquer tamanho de tela."],
 ["target", "Feito para gerar contato", "Chamadas para ação, formulários e WhatsApp levando o visitante para o próximo passo."]];
-
-
-const examples = [
-{
-  tag: "SAÚDE",
-  title: "Clínica Aurora",
-  text: "Leve, humana e acolhedora.",
-  image: "https://images.pexels.com/photos/4266936/pexels-photo-4266936.jpeg?cs=srgb&dl=pexels-cedric-fauntleroy-4266936.jpg&fm=jpg",
-  href: "/exemplos/clinica"
-},
-{
-  tag: "BARBEARIA",
-  title: "Black House",
-  text: "Vintage, elegante e marcante.",
-  image: "https://images.pexels.com/photos/12505400/pexels-photo-12505400.jpeg?cs=srgb&dl=pexels-theshuttervision-12505400.jpg&fm=jpg",
-  href: "/exemplos/barbearia"
-},
-{
-  tag: "RESTAURANTE",
-  title: "Casa Sapore",
-  text: "Chique, moderna e convidativa.",
-  image: "https://images.pexels.com/photos/5865286/pexels-photo-5865286.jpeg?cs=srgb&dl=pexels-rachel-claire-5865286.jpg&fm=jpg",
-  href: "/exemplos/restaurante"
-},
-{
-  tag: "COMÉRCIO LOCAL",
-  title: "Bosque Store",
-  text: "Sóbria, organizada e confiável.",
-  image: "https://images.pexels.com/photos/3738387/pexels-photo-3738387.jpeg?cs=srgb&dl=pexels-polina-tankilevitch-3738387.jpg&fm=jpg",
-  href: "/exemplos/comercio"
-}];
-
-
-const mosaic = [
-["https://images.pexels.com/photos/4266936/pexels-photo-4266936.jpeg?cs=srgb&dl=pexels-cedric-fauntleroy-4266936.jpg&fm=jpg", "Clínica"],
-["https://images.pexels.com/photos/12505400/pexels-photo-12505400.jpeg?cs=srgb&dl=pexels-theshuttervision-12505400.jpg&fm=jpg", "Barbearia"],
-["https://images.pexels.com/photos/5865286/pexels-photo-5865286.jpeg?cs=srgb&dl=pexels-rachel-claire-5865286.jpg&fm=jpg", "Restaurante"],
-["https://images.pexels.com/photos/3738387/pexels-photo-3738387.jpeg?cs=srgb&dl=pexels-polina-tankilevitch-3738387.jpg&fm=jpg", "Comércio"]];
 
 
 async function Home() {
@@ -114,7 +77,7 @@ async function Home() {
             <div className="heroPriceV9">
               <div>
                 <small>A PARTIR DE</small>
-                <strong>{priceLabel(entry?.monthly_price_cents)}</strong>
+                <strong>{priceLabel(commercialPlans[0].price * 100)}</strong>
               </div>
               <div className="heroPriceMetaV9">
                 <b>/mês</b>
@@ -124,12 +87,12 @@ async function Home() {
 
             <div className="heroButtons">
               <a className="primaryBtn" href="#contato">Quero meu site</a>
-              <a className="secondaryBtn elegantGhost" href="#portfolio">Ver exemplos</a>
+              <a className="secondaryBtn elegantGhost" href="/portfolio">Ver exemplos</a>
             </div>
 
             <div className="heroProof elegantProof">
               <span>R$0 de criação</span>
-              <span>Domínio incluso*</span>
+              <span>Domínio .com.br incluso*</span>
               <span>{entry ? `${entry.cycles} cobranças mensais` : "Planos mensais"}</span>
             </div>
           </div>
@@ -179,61 +142,6 @@ async function Home() {
         </div>
       </section>
 
-      <section id="portfolio" className="portfolioCleanV12">
-        <div className="portfolioV12Head">
-          <div>
-            <span className="kicker dark">EXEMPLOS</span>
-            <h2>Quatro estilos. Quatro negócios diferentes.</h2>
-          </div>
-          <p>
-            Todos os exemplos abaixo são navegáveis. Abra, clique, teste os menus,
-            agendas e formulários e veja como cada nicho pode ter personalidade própria.
-          </p>
-        </div>
-
-        <div className="portfolioV12Grid">
-          {examples.map((item) =>
-          <a className="portfolioV12Card" href={item.href} key={item.title}>
-              <div className="portfolioV12Image">
-                <img src={item.image+"&auto=compress&w=900"} alt={item.title+" — exemplo de site profissional"} loading="lazy" decoding="async" width="900" height="600" />
-                <span className="portfolioV12Tag">{item.tag}</span>
-              </div>
-              <div className="portfolioV12Info">
-                <div>
-                  <h3>{item.title}</h3>
-                  <p>{item.text}</p>
-                </div>
-                <div className="portfolioV12Arrow">↗</div>
-              </div>
-            </a>
-          )}
-        </div>
-      </section>
-
-      <section className="matchSectionV12">
-        <div className="matchTechBg" />
-        <div className="matchShade" />
-        <div className="matchInnerV12">
-          <div className="matchCopyV12">
-            <span className="kicker">IDENTIDADE VISUAL</span>
-            <h2>Seu site precisa combinar com o seu negócio.</h2>
-            <p>
-              Cores, imagens e linguagem devem refletir a identidade da sua empresa
-              e ajudar seus clientes a reconhecer o que torna seu negócio especial.
-            </p>
-          </div>
-
-          <div className="matchMosaicV12">
-            {mosaic.map(([img, label]) =>
-            <div className="mosaicCardV12" key={label}>
-                <img src={img+"&auto=compress&w=600"} alt={label+" — segmento atendido"} loading="lazy" decoding="async" width="600" height="400" />
-                <span>{label}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
       <QuarterlyReview />
 
       <section id="planos" className="plansSection">
@@ -245,7 +153,7 @@ async function Home() {
 
         <PlanCards home />
 
-        <p className="legalNote">* Domínio sujeito à disponibilidade e às condições do plano.</p>
+        <p className="legalNote">* Domínio .com.br incluso, sujeito à disponibilidade.</p>
       </section>
 
       <section id="faq" className="section faqSection">
@@ -275,7 +183,7 @@ async function Home() {
         </div>
       </section>
 
-      <section className="homeContactForm"><div><span className="eyebrow">DO SEU JEITO, DESDE O INÍCIO</span><h2>Conte sua ideia.<br />Vamos dar o próximo passo.</h2><p>Um espaço para entender seu negócio e a presença que você quer construir.</p></div><ContactForm options={[...plans.map((plan) => plan.name), "Quero orientação"]} /></section>
+      <section className="homeContactForm"><div><span className="eyebrow">DO SEU JEITO, DESDE O INÍCIO</span><h2>Conte sua ideia.<br />Vamos dar o próximo passo.</h2><p>Um espaço para entender seu negócio e a presença que você quer construir.</p></div><ContactForm options={[...commercialPlans.map((plan) => plan.name), "Quero orientação"]} /></section>
       <Footer />
     </main>);
 

@@ -1,3 +1,4 @@
+import { commercialCheckoutAllowed } from '../../config/commercial-checkout.mjs';
 import { createHash } from 'node:crypto';
 import { checkoutPlans } from '../../config/checkout-plans.mjs';
 import { checkRemote, mpRequest } from './mercadopago.mjs';
@@ -9,7 +10,7 @@ export const receiptCookie = 'marquesano_checkout_receipt';
 export const attemptKey = value => createHash('sha256').update(value).digest('hex');
 const uncertain = () => new InputError('A assinatura ainda não foi confirmada. Use Verificar assinatura antes de tentar uma nova contratação.', 202);
 export function availableForCard(plan) {
-  return Boolean(plan?.active && Number.isSafeInteger(plan.monthly_price_cents) && plan.monthly_price_cents > 0 &&
+  return Boolean(commercialCheckoutAllowed(plan) && plan?.active && Number.isSafeInteger(plan.monthly_price_cents) && plan.monthly_price_cents > 0 &&
     plan.cycles === 12 && plan.mercadopago_plan_id && plan.sync_state === 'synced' && plan.synced_revision === plan.revision);
 }
 
